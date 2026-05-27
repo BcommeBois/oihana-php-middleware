@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Request ID
+
+- **`requestIdFromRequest()`** — reads the `X-Request-Id` from the incoming request and returns it when it passes a conservative shape check (1 to 128 chars, URL-safe alphabet `[A-Za-z0-9_-]`); otherwise generates a fresh 128-bit base64url identifier via `oihana\core\encoding\randomBase64Url()`. Defense-in-depth against log-pollution and header-injection attacks via a forged incoming header.
+- **`withRequestIdHeader()`** — stamps the request ID on the response. PSR-7 immutable: returns a new response, replaces any pre-existing value.
+- **`RequestIdField`** enum — `HEADER_NAME = 'X-Request-Id'` and `ATTRIBUTE_NAME = 'requestId'`. Conventional default names for wiring request-id propagation through the middleware chain.
+
 ### CSRF
 
 - **`generateCsrfToken()`** — issues a signed stateless CSRF token suitable for the double-submit pattern. Wire format `<id>.<exp>.<sig>`: a 128-bit base64url random `<id>` (CSPRNG from `oihana\core\encoding\randomBase64Url()`), an absolute Unix expiry timestamp `<exp>` (`'0'` when no TTL), and a base64url HMAC-SHA256 `<sig>` keyed by the supplied secret. Optional `$ttlSeconds` argument; `null` or `0` ⇒ no expiry. Throws `InvalidArgumentException` when the secret is empty.

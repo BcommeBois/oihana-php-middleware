@@ -55,6 +55,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[En-têtes de sécurité](security-headers.md)** — `withSecurityHeaders`, `buildCspHeader`, enums `ReferrerPolicy` / `FrameOptions` / `CspDirective` / `SecurityHeadersOption`.
 - **[CORS](cors.md)** — `applyCorsHeaders` avec preflight, allowlist, credentials, exposed-headers, enum `CorsOption`.
 - **[CSRF](csrf.md)** — `generateCsrfToken`, `verifyCsrfToken`, enum `CsrfField`. Pattern signed double-submit stateless, HMAC-SHA256, TTL optionnel.
+- **[Request ID](request-id.md)** — `requestIdFromRequest`, `withRequestIdHeader`, enum `RequestIdField`. Propagation `X-Request-Id` avec validation conservatrice de l'en-tête entrant.
 
 ## Code source
 
