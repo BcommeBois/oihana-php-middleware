@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-27
+
+Fourth release. One new helper family added on top of v0.3.0: extended Security headers — Cross-Origin policies (COOP / COEP / CORP) and Permissions-Policy. 1 new procedural helper (`buildPermissionsPolicyHeader`), 4 new typed enums (`CrossOriginOpenerPolicy`, `CrossOriginEmbedderPolicy`, `CrossOriginResourcePolicy`, `PermissionsPolicyFeature`), 4 new `SecurityHeadersOption` keys (`COOP`, `COEP`, `CORP`, `PERMISSIONS_POLICY`), 24 new tests (165 total / 336 assertions). Bilingual FR/EN wiki extended with two new sections under `withSecurityHeaders` and one new top-level section. No breaking change on the v0.3.0 surface.
+
 ### Cross-Origin policies
 
 - **`withSecurityHeaders()`** extended with three new options — `SecurityHeadersOption::COOP`, `COEP`, `CORP` — that emit `Cross-Origin-Opener-Policy`, `Cross-Origin-Embedder-Policy`, and `Cross-Origin-Resource-Policy` respectively. Same opt-in semantics as the existing `FRAME_OPTIONS` / `REFERRER_POLICY` keys (omitted / `null` / empty string ⇒ no header). The classic "cross-origin isolation" triad (`COOP=same-origin` + `COEP=require-corp` + `CORP=same-origin`) unlocks `SharedArrayBuffer` and high-resolution timers in modern browsers.
@@ -102,7 +106,8 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.4.0
 [0.3.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.3.0
 [0.2.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.2.0
 [0.1.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.1.0
