@@ -54,6 +54,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Démarrage](getting-started.md)** — installation, mocking PSR-7, premiers exemples.
 - **[En-têtes de sécurité](security-headers.md)** — `withSecurityHeaders`, `buildCspHeader`, enums `ReferrerPolicy` / `FrameOptions` / `CspDirective` / `SecurityHeadersOption`.
 - **[CORS](cors.md)** — `applyCorsHeaders` avec preflight, allowlist, credentials, exposed-headers, enum `CorsOption`.
+- **[CSRF](csrf.md)** — `generateCsrfToken`, `verifyCsrfToken`, enum `CsrfField`. Pattern signed double-submit stateless, HMAC-SHA256, TTL optionnel.
 
 ## Code source
 
