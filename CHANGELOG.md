@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-27
+
+First public release. Composable PHP middleware helpers for HTTP security: 3 procedural helpers (`withSecurityHeaders`, `buildCspHeader`, `applyCorsHeaders`) and 5 typed enums (`SecurityHeadersOption`, `ReferrerPolicy`, `FrameOptions`, `CspDirective`, `CorsOption`). PSR-7 compatible, zero magic strings, designed to slot into any PSR-15 middleware (Slim, Mezzio, Laminas, etc.) without imposing a framework. 62 PHPUnit tests, 137 assertions. Bilingual FR/EN wiki shipped from day one.
+
 ### Security headers
 
 - **`withSecurityHeaders()`** — single-call application of HSTS, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` and `Content-Security-Policy` to a PSR-7 `Response`. Each header is opt-in; the response is never mutated. CSP accepts a raw string or a directive array. HSTS supports `includeSubDomains` (default `true`) and `preload` (default `false`). CSP can be emitted in report-only mode.
@@ -40,3 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
+
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.1.0
