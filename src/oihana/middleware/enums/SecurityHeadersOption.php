@@ -57,4 +57,24 @@ class SecurityHeadersOption
      * `cspReportOnly` — when `true`, emits `Content-Security-Policy-Report-Only` instead of `Content-Security-Policy` (`bool`, default `false`).
      */
     public const string CSP_REPORT_ONLY = 'cspReportOnly' ;
+
+    /**
+     * `coop` — value of `Cross-Origin-Opener-Policy` (`string|null`). Use {@see CrossOriginOpenerPolicy} constants.
+     */
+    public const string COOP = 'coop' ;
+
+    /**
+     * `coep` — value of `Cross-Origin-Embedder-Policy` (`string|null`). Use {@see CrossOriginEmbedderPolicy} constants.
+     */
+    public const string COEP = 'coep' ;
+
+    /**
+     * `corp` — value of `Cross-Origin-Resource-Policy` (`string|null`). Use {@see CrossOriginResourcePolicy} constants.
+     */
+    public const string CORP = 'corp' ;
+
+    /**
+     * `permissionsPolicy` — `Permissions-Policy` value: `string`, feature `array` (forwarded to `buildPermissionsPolicyHeader()`), or `null`.
+     */
+    public const string PERMISSIONS_POLICY = 'permissionsPolicy' ;
 }

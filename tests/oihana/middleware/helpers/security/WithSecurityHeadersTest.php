@@ -7,8 +7,12 @@ use PHPUnit\Framework\TestCase ;
 use Psr\Http\Message\ResponseInterface ;
 use Slim\Psr7\Factory\ResponseFactory ;
 
+use oihana\middleware\enums\CrossOriginEmbedderPolicy ;
+use oihana\middleware\enums\CrossOriginOpenerPolicy ;
+use oihana\middleware\enums\CrossOriginResourcePolicy ;
 use oihana\middleware\enums\CspDirective ;
 use oihana\middleware\enums\FrameOptions ;
+use oihana\middleware\enums\PermissionsPolicyFeature ;
 use oihana\middleware\enums\ReferrerPolicy ;
 use oihana\middleware\enums\SecurityHeadersOption ;
 
@@ -259,5 +263,98 @@ class WithSecurityHeadersTest extends TestCase
 
         $this->assertSame( 'foo'     , $augmented->getHeaderLine( 'X-Custom'              ) ) ;
         $this->assertSame( 'nosniff' , $augmented->getHeaderLine( 'X-Content-Type-Options' ) ) ;
+    }
+
+    public function testCoop() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::COOP => CrossOriginOpenerPolicy::SAME_ORIGIN ,
+        ]) ;
+
+        $this->assertSame( 'same-origin' , $response->getHeaderLine( 'Cross-Origin-Opener-Policy' ) ) ;
+    }
+
+    public function testCoopEmptyStringProducesNoHeader() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::COOP => '' ,
+        ]) ;
+
+        $this->assertFalse( $response->hasHeader( 'Cross-Origin-Opener-Policy' ) ) ;
+    }
+
+    public function testCoep() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::COEP => CrossOriginEmbedderPolicy::REQUIRE_CORP ,
+        ]) ;
+
+        $this->assertSame( 'require-corp' , $response->getHeaderLine( 'Cross-Origin-Embedder-Policy' ) ) ;
+    }
+
+    public function testCorp() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::CORP => CrossOriginResourcePolicy::SAME_SITE ,
+        ]) ;
+
+        $this->assertSame( 'same-site' , $response->getHeaderLine( 'Cross-Origin-Resource-Policy' ) ) ;
+    }
+
+    public function testCrossOriginIsolationTriad() :void
+    {
+        // The classic 3-headers combo that unlocks SharedArrayBuffer.
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::COOP => CrossOriginOpenerPolicy::SAME_ORIGIN ,
+            SecurityHeadersOption::COEP => CrossOriginEmbedderPolicy::REQUIRE_CORP ,
+            SecurityHeadersOption::CORP => CrossOriginResourcePolicy::SAME_ORIGIN ,
+        ]) ;
+
+        $this->assertSame( 'same-origin'   , $response->getHeaderLine( 'Cross-Origin-Opener-Policy'   ) ) ;
+        $this->assertSame( 'require-corp'  , $response->getHeaderLine( 'Cross-Origin-Embedder-Policy' ) ) ;
+        $this->assertSame( 'same-origin'   , $response->getHeaderLine( 'Cross-Origin-Resource-Policy' ) ) ;
+    }
+
+    public function testPermissionsPolicyFromArrayComposesViaHelper() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::PERMISSIONS_POLICY =>
+            [
+                PermissionsPolicyFeature::GEOLOCATION => false ,
+                PermissionsPolicyFeature::CAMERA      => 'self' ,
+            ] ,
+        ]) ;
+
+        $this->assertSame
+        (
+            'geolocation=(), camera=(self)' ,
+            $response->getHeaderLine( 'Permissions-Policy' ) ,
+        ) ;
+    }
+
+    public function testPermissionsPolicyFromString() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::PERMISSIONS_POLICY => 'geolocation=(), camera=*' ,
+        ]) ;
+
+        $this->assertSame( 'geolocation=(), camera=*' , $response->getHeaderLine( 'Permissions-Policy' ) ) ;
+    }
+
+    public function testPermissionsPolicyEmptyArrayProducesNoHeader() :void
+    {
+        $response = withSecurityHeaders( $this->newResponse() ,
+        [
+            SecurityHeadersOption::PERMISSIONS_POLICY => [] ,
+        ]) ;
+
+        $this->assertFalse( $response->hasHeader( 'Permissions-Policy' ) ) ;
     }
 }

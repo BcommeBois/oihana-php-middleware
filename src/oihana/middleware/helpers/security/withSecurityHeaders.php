@@ -43,6 +43,22 @@ use oihana\middleware\enums\SecurityHeadersOption ;
  *   `Content-Security-Policy-Report-Only` instead of
  *   `Content-Security-Policy` — useful to test a policy in production
  *   without enforcing it.
+ * - `SecurityHeadersOption::COOP` (string|null) — value of
+ *   `Cross-Origin-Opener-Policy` (use
+ *   {@see \oihana\middleware\enums\CrossOriginOpenerPolicy} constants).
+ *   Omitted, `null` or empty string ⇒ no header.
+ * - `SecurityHeadersOption::COEP` (string|null) — value of
+ *   `Cross-Origin-Embedder-Policy` (use
+ *   {@see \oihana\middleware\enums\CrossOriginEmbedderPolicy} constants).
+ *   Omitted, `null` or empty string ⇒ no header.
+ * - `SecurityHeadersOption::CORP` (string|null) — value of
+ *   `Cross-Origin-Resource-Policy` (use
+ *   {@see \oihana\middleware\enums\CrossOriginResourcePolicy} constants).
+ *   Omitted, `null` or empty string ⇒ no header.
+ * - `SecurityHeadersOption::PERMISSIONS_POLICY` (string|array|null) — value
+ *   of `Permissions-Policy`. When an array is passed it is forwarded to
+ *   {@see buildPermissionsPolicyHeader()} to compose the value. Omitted,
+ *   `null`, empty string or empty array ⇒ no header.
  *
  * Each emitted header replaces any pre-existing value on the response
  * (PSR-7 `withHeader` semantics). Pre-existing headers not touched by
@@ -139,6 +155,51 @@ function withSecurityHeaders( ResponseInterface $response , array $options = [] 
             : HttpHeader::CONTENT_SECURITY_POLICY ;
 
         $response = $response->withHeader( $headerName , $cspValue ) ;
+    }
+
+    // Cross-Origin-Opener-Policy
+    $coop = $options[ SecurityHeadersOption::COOP ] ?? null ;
+
+    if ( is_string( $coop ) && $coop !== '' )
+    {
+        $response = $response->withHeader( HttpHeader::CROSS_ORIGIN_OPENER_POLICY , $coop ) ;
+    }
+
+    // Cross-Origin-Embedder-Policy
+    $coep = $options[ SecurityHeadersOption::COEP ] ?? null ;
+
+    if ( is_string( $coep ) && $coep !== '' )
+    {
+        $response = $response->withHeader( HttpHeader::CROSS_ORIGIN_EMBEDDER_POLICY , $coep ) ;
+    }
+
+    // Cross-Origin-Resource-Policy
+    $corp = $options[ SecurityHeadersOption::CORP ] ?? null ;
+
+    if ( is_string( $corp ) && $corp !== '' )
+    {
+        $response = $response->withHeader( HttpHeader::CROSS_ORIGIN_RESOURCE_POLICY , $corp ) ;
+    }
+
+    // Permissions-Policy
+    $permissionsPolicy = $options[ SecurityHeadersOption::PERMISSIONS_POLICY ] ?? null ;
+
+    if ( is_array( $permissionsPolicy ) )
+    {
+        $permissionsValue = buildPermissionsPolicyHeader( $permissionsPolicy ) ;
+    }
+    elseif ( is_string( $permissionsPolicy ) )
+    {
+        $permissionsValue = $permissionsPolicy ;
+    }
+    else
+    {
+        $permissionsValue = '' ;
+    }
+
+    if ( $permissionsValue !== '' )
+    {
+        $response = $response->withHeader( HttpHeader::PERMISSIONS_POLICY , $permissionsValue ) ;
     }
 
     return $response ;

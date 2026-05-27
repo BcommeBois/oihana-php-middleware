@@ -20,15 +20,21 @@ class SecurityHeadersOptionTest extends TestCase
         $this->assertSame( 'referrerPolicy'        , SecurityHeadersOption::REFERRER_POLICY         ) ;
         $this->assertSame( 'csp'                   , SecurityHeadersOption::CSP                     ) ;
         $this->assertSame( 'cspReportOnly'         , SecurityHeadersOption::CSP_REPORT_ONLY         ) ;
+        $this->assertSame( 'coop'                  , SecurityHeadersOption::COOP                    ) ;
+        $this->assertSame( 'coep'                  , SecurityHeadersOption::COEP                    ) ;
+        $this->assertSame( 'corp'                  , SecurityHeadersOption::CORP                    ) ;
+        $this->assertSame( 'permissionsPolicy'     , SecurityHeadersOption::PERMISSIONS_POLICY      ) ;
     }
 
     public function testGetAllExposesEveryConstantOnce() :void
     {
         $all = SecurityHeadersOption::getAll() ;
 
-        $this->assertCount( 8 , $all ) ;
-        $this->assertContains( SecurityHeadersOption::HSTS            , $all ) ;
-        $this->assertContains( SecurityHeadersOption::CSP_REPORT_ONLY , $all ) ;
+        $this->assertCount( 12 , $all ) ;
+        $this->assertContains( SecurityHeadersOption::HSTS               , $all ) ;
+        $this->assertContains( SecurityHeadersOption::CSP_REPORT_ONLY    , $all ) ;
+        $this->assertContains( SecurityHeadersOption::COOP               , $all ) ;
+        $this->assertContains( SecurityHeadersOption::PERMISSIONS_POLICY , $all ) ;
         $this->assertSame( array_unique( $all ) , $all , 'No duplicate value' ) ;
     }
 }

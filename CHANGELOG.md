@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cross-Origin policies
+
+- **`withSecurityHeaders()`** extended with three new options — `SecurityHeadersOption::COOP`, `COEP`, `CORP` — that emit `Cross-Origin-Opener-Policy`, `Cross-Origin-Embedder-Policy`, and `Cross-Origin-Resource-Policy` respectively. Same opt-in semantics as the existing `FRAME_OPTIONS` / `REFERRER_POLICY` keys (omitted / `null` / empty string ⇒ no header). The classic "cross-origin isolation" triad (`COOP=same-origin` + `COEP=require-corp` + `CORP=same-origin`) unlocks `SharedArrayBuffer` and high-resolution timers in modern browsers.
+- **`CrossOriginOpenerPolicy`** enum — 5 typed constants (`UNSAFE_NONE`, `SAME_ORIGIN_ALLOW_POPUPS`, `SAME_ORIGIN`, `NOOPENER_ALLOW_POPUPS`, `RESTRICT_PROPERTIES`). Includes recent Chromium additions (`NOOPENER_ALLOW_POPUPS`, `RESTRICT_PROPERTIES`).
+- **`CrossOriginEmbedderPolicy`** enum — 3 typed constants (`UNSAFE_NONE`, `REQUIRE_CORP`, `CREDENTIALLESS`). `CREDENTIALLESS` enables cross-origin isolation without requiring third-party servers to ship CORP headers.
+- **`CrossOriginResourcePolicy`** enum — 3 typed constants (`SAME_SITE`, `SAME_ORIGIN`, `CROSS_ORIGIN`).
+
+### Permissions-Policy
+
+- **`buildPermissionsPolicyHeader()`** — composes a `Permissions-Policy` header value from a `feature => allowlist` array. Smart per-feature allowlist API mirroring the `buildCspHeader()` ergonomics: `false` ⇒ `()` (deny), `true` or `'*'` ⇒ `*` (allow all), `'self'` ⇒ `(self)`, single origin string ⇒ auto-quoted, array ⇒ composed item-by-item with `self` kept as a token and every other entry auto-quoted as an origin. Raw strings starting with `(` are passed through verbatim (escape hatch). Throws `InvalidArgumentException` on malformed input.
+- **`withSecurityHeaders()`** extended with `SecurityHeadersOption::PERMISSIONS_POLICY` (`string|array|null`). When an array is supplied it is forwarded to `buildPermissionsPolicyHeader()` to compose the value, mirroring the `CSP` option pattern.
+- **`PermissionsPolicyFeature`** enum — ~40 typed constants grouped by category (privacy-sensitive: camera/microphone/geolocation/payment/usb/midi/bluetooth/hid/serial ; embedding & media: fullscreen/picture-in-picture/autoplay/encrypted-media/display-capture/speaker-selection ; sensors: accelerometer/gyroscope/magnetometer/ambient-light-sensor/compute-pressure/gamepad ; identity & storage: publickey-credentials-{get,create}/identity-credentials-get/otp-credentials/storage-access ; clipboard & sharing: clipboard-{read,write}/web-share/screen-wake-lock/idle-detection/local-fonts/window-management ; attribution & tracking: attribution-reporting/browsing-topics/xr-spatial-tracking/cross-origin-isolated/battery/keyboard-map ; deprecated: interest-cohort/document-domain/sync-xhr/execution-while-{not-rendered,out-of-viewport}). Open vocabulary: `buildPermissionsPolicyHeader()` also accepts raw feature names.
+
+### Documentation
+
+- Wiki `wiki/{fr,en}/security-headers.md` extended with two new sections under `withSecurityHeaders` (`Cross-Origin policies (COOP / COEP / CORP)` + `Permissions-Policy`) and one new top-level section (`buildPermissionsPolicyHeader()`). Includes the cross-origin isolation triad recipe and a "deny everything sensitive" Permissions-Policy baseline.
+
 ## [0.3.0] - 2026-05-27
 
 Third release. One new helper family added on top of v0.2.0: Rate limiting (fixed-window quota enforcement on PSR-7 requests with a pluggable store backend). 2 new procedural helpers (`enforceRateLimit`, `withRateLimitHeaders`), 1 new interface (`RateLimitStore`), 2 new classes (`InMemoryRateLimitStore`, `RateLimitDecision`), 1 new typed enum (`RateLimitOption`), 26 new tests (141 total / 301 assertions). Bilingual FR/EN wiki extended with a dedicated page. Memcached-backed store added as a `composer.json` `suggest` (shipped separately in `oihana/php-memcached`). No breaking change on the v0.2.0 surface.

@@ -51,6 +51,7 @@
             "src/oihana/middleware/helpers/requestId/requestIdFromRequest.php" ,
             "src/oihana/middleware/helpers/requestId/withRequestIdHeader.php" ,
             "src/oihana/middleware/helpers/security/buildCspHeader.php" ,
+            "src/oihana/middleware/helpers/security/buildPermissionsPolicyHeader.php" ,
             "src/oihana/middleware/helpers/security/withSecurityHeaders.php"
         ]
     } ,

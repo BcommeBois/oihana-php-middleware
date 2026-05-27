@@ -1,11 +1,12 @@
 # Security headers
 
-`oihana/php-middleware` ships two procedural helpers to apply the most common HTTP security response headers to a PSR-7 response:
+`oihana/php-middleware` ships three procedural helpers to apply the most common HTTP security response headers to a PSR-7 response:
 
-- [`withSecurityHeaders()`](#withsecurityheaders) — the single entry point that applies HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy and Content-Security-Policy in one call.
+- [`withSecurityHeaders()`](#withsecurityheaders) — the single entry point that applies HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy, the three Cross-Origin policies (COOP / COEP / CORP) and Permissions-Policy in one call.
 - [`buildCspHeader()`](#buildcspheader) — sub-helper that composes a `Content-Security-Policy` header value from a directive array.
+- [`buildPermissionsPolicyHeader()`](#buildpermissionspolicyheader) — sub-helper that composes a `Permissions-Policy` header value from a feature array.
 
-Both are PSR-7 immutable: they return a **new** `ResponseInterface` — the supplied instance is never mutated.
+All three are PSR-7 immutable: they return a **new** `ResponseInterface` — the supplied instance is never mutated.
 
 ## `withSecurityHeaders()`
 
@@ -29,6 +30,10 @@ The `$options` array is keyed by [`SecurityHeadersOption`](../../src/oihana/midd
 | `REFERRER_POLICY` | `string\|null` | Value of `Referrer-Policy`. Use the `ReferrerPolicy::*` constants. |
 | `CSP` | `string\|array\|null` | Value of `Content-Security-Policy`. If `array`, forwarded to `buildCspHeader()`. |
 | `CSP_REPORT_ONLY` | `bool` (default `false`) | When `true`, emits `Content-Security-Policy-Report-Only` instead of `Content-Security-Policy`. Useful to test a policy in production without enforcing it. |
+| `COOP` | `string\|null` | Value of `Cross-Origin-Opener-Policy`. Use the `CrossOriginOpenerPolicy::*` constants. |
+| `COEP` | `string\|null` | Value of `Cross-Origin-Embedder-Policy`. Use the `CrossOriginEmbedderPolicy::*` constants. |
+| `CORP` | `string\|null` | Value of `Cross-Origin-Resource-Policy`. Use the `CrossOriginResourcePolicy::*` constants. |
+| `PERMISSIONS_POLICY` | `string\|array\|null` | Value of `Permissions-Policy`. If `array`, forwarded to `buildPermissionsPolicyHeader()`. |
 
 ### Usage
 
@@ -75,6 +80,70 @@ $response = withSecurityHeaders( $response ,
 ```
 
 Lets you deploy a strict policy in production while observing violations reported through `report-uri` / `report-to` — without breaking the app. Once zero violations are observed, switch to enforcement mode (`CSP_REPORT_ONLY: false`).
+
+### Cross-Origin policies (COOP / COEP / CORP)
+
+Three sibling headers controlling cross-origin interactions:
+
+| Header | Constant | What it controls |
+| :--- | :--- | :--- |
+| `Cross-Origin-Opener-Policy` | `CrossOriginOpenerPolicy` | Whether a top-level document can share its browsing-context group with cross-origin documents (mitigates XS-Leaks, Spectre). |
+| `Cross-Origin-Embedder-Policy` | `CrossOriginEmbedderPolicy` | Whether the document can embed cross-origin subresources without an explicit opt-in. |
+| `Cross-Origin-Resource-Policy` | `CrossOriginResourcePolicy` | Which origins are allowed to embed *this* resource as a subresource. |
+
+The classic "cross-origin isolation" triad unlocks `SharedArrayBuffer` and high-resolution timers:
+
+```php
+$response = withSecurityHeaders( $response ,
+[
+    SecurityHeadersOption::COOP => CrossOriginOpenerPolicy::SAME_ORIGIN ,
+    SecurityHeadersOption::COEP => CrossOriginEmbedderPolicy::REQUIRE_CORP ,
+    SecurityHeadersOption::CORP => CrossOriginResourcePolicy::SAME_ORIGIN ,
+]) ;
+```
+
+For looser setups, `CrossOriginOpenerPolicy::SAME_ORIGIN_ALLOW_POPUPS` keeps the isolation while letting OAuth / payment popups stay in the group, and `CrossOriginEmbedderPolicy::CREDENTIALLESS` enables cross-origin isolation without requiring third-party servers to ship CORP headers.
+
+### Permissions-Policy
+
+Disables (or restricts) policy-controlled browser features such as the camera, microphone, geolocation, payment APIs, USB, sensors, clipboard, etc. Two accepted forms:
+
+- a **raw string** if you want to manage the header value yourself: `'geolocation=(), camera=*'` ;
+- an **array** keyed by [`PermissionsPolicyFeature`](../../src/oihana/middleware/enums/PermissionsPolicyFeature.php) constants (or raw feature names), forwarded to `buildPermissionsPolicyHeader()`.
+
+```php
+use oihana\middleware\enums\PermissionsPolicyFeature ;
+
+$response = withSecurityHeaders( $response ,
+[
+    SecurityHeadersOption::PERMISSIONS_POLICY =>
+    [
+        PermissionsPolicyFeature::GEOLOCATION => false ,                            // deny
+        PermissionsPolicyFeature::CAMERA      => 'self' ,                           // same-origin
+        PermissionsPolicyFeature::PAYMENT     => [ 'self' , 'https://stripe.com' ], // self + a partner
+        PermissionsPolicyFeature::FULLSCREEN  => '*' ,                              // allow all
+    ] ,
+]) ;
+// => Permissions-Policy: geolocation=(), camera=(self), payment=(self "https://stripe.com"), fullscreen=*
+```
+
+A reasonable "deny everything sensitive" baseline:
+
+```php
+PermissionsPolicyFeature::CAMERA         => false ,
+PermissionsPolicyFeature::MICROPHONE     => false ,
+PermissionsPolicyFeature::GEOLOCATION    => false ,
+PermissionsPolicyFeature::PAYMENT        => false ,
+PermissionsPolicyFeature::USB            => false ,
+PermissionsPolicyFeature::MIDI           => false ,
+PermissionsPolicyFeature::BLUETOOTH      => false ,
+PermissionsPolicyFeature::HID            => false ,
+PermissionsPolicyFeature::SERIAL         => false ,
+PermissionsPolicyFeature::IDLE_DETECTION => false ,
+PermissionsPolicyFeature::LOCAL_FONTS    => false ,
+```
+
+Activate only what your app actually needs and explicitly deny everything else.
 
 ## `buildCspHeader()`
 
@@ -125,9 +194,63 @@ The `CspDirective` enum exposes the most commonly used CSP Level 3 directives (`
 
 These checks catch composition mistakes on the caller side early, rather than silently emitting a malformed CSP.
 
+## `buildPermissionsPolicyHeader()`
+
+```php
+namespace oihana\middleware\helpers\security ;
+
+function buildPermissionsPolicyHeader( array $directives ) : string ;
+```
+
+Composes a `Permissions-Policy` header value from an associative array `feature => allowlist`.
+
+### Accepted forms for each allowlist
+
+| Form | Example | Result |
+| :--- | :--- | :--- |
+| `false` | `false` | `()` — explicit deny |
+| `true` or `'*'` | `true` | `*` — allow all origins (the only form without parentheses) |
+| `'self'` | `'self'` | `(self)` — same-origin only |
+| `'https://x.com'` | single origin string | `("https://x.com")` — auto-quoted single origin |
+| `'(self "https://x.com")'` | raw string starting with `(` | Passed through verbatim |
+| `['self', 'https://x.com']` | array | `(self "https://x.com")` — `self` stays a token, every other entry auto-quoted |
+| `[]` | empty array | `()` — same as `false` |
+
+Features are joined by `', '`. Empty input returns the empty string — the caller can then skip emitting the header entirely.
+
+### Usage
+
+```php
+use function oihana\middleware\helpers\security\buildPermissionsPolicyHeader ;
+use oihana\middleware\enums\PermissionsPolicyFeature ;
+
+$value = buildPermissionsPolicyHeader(
+[
+    PermissionsPolicyFeature::GEOLOCATION => false ,
+    PermissionsPolicyFeature::CAMERA      => 'self' ,
+    PermissionsPolicyFeature::PAYMENT     => [ 'self' , 'https://stripe.com' ] ,
+    PermissionsPolicyFeature::FULLSCREEN  => '*' ,
+]) ;
+// => 'geolocation=(), camera=(self), payment=(self "https://stripe.com"), fullscreen=*'
+```
+
+The `PermissionsPolicyFeature` enum exposes ~40 features grouped by category (privacy-sensitive, embedding & media, sensors, identity & storage, clipboard & sharing, attribution & tracking, deprecated). For a feature not exposed by the enum, pass the raw string as the key — the helper accepts it.
+
+### Defense against invalid values
+
+`buildPermissionsPolicyHeader` throws `InvalidArgumentException` for:
+
+- an empty feature name ;
+- an empty allowlist string ;
+- a non-string or empty item in an array allowlist.
+
+These checks catch composition mistakes on the caller side early, rather than silently emitting a malformed `Permissions-Policy`.
+
 ## See also
 
 - [Getting started](getting-started.md) — wiring the helper inside a PSR-15 middleware.
 - [CORS](cors.md) — the other helper family in this package.
 - [CSP Level 3 spec](https://www.w3.org/TR/CSP3/) — official reference for the directives.
 - [Referrer Policy spec](https://www.w3.org/TR/referrer-policy/) — semantics of the values.
+- [Permissions Policy spec](https://www.w3.org/TR/permissions-policy/) — feature list and allowlist grammar.
+- [HTML — Cross-Origin-Opener-Policy](https://html.spec.whatwg.org/multipage/browsers.html#cross-origin-opener-policies) and [Cross-Origin-Embedder-Policy](https://html.spec.whatwg.org/multipage/browsers.html#coep) — official semantics of the two isolation headers.
