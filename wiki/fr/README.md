@@ -57,6 +57,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[CSRF](csrf.md)** — `generateCsrfToken`, `verifyCsrfToken`, enum `CsrfField`. Pattern signed double-submit stateless, HMAC-SHA256, TTL optionnel.
 - **[Request ID](request-id.md)** — `requestIdFromRequest`, `withRequestIdHeader`, enum `RequestIdField`. Propagation `X-Request-Id` avec validation conservatrice de l'en-tête entrant.
 - **[Mode maintenance](maintenance.md)** — `respondMaintenanceMode`, enum `MaintenanceOption`. Réponse 503 propre avec `Retry-After` (int / DateTime / string) et body optionnel.
+- **[Limitation de débit](rate-limiting.md)** — `enforceRateLimit`, `withRateLimitHeaders`, interface `RateLimitStore`, `InMemoryRateLimitStore`, `RateLimitDecision`, enum `RateLimitOption`. Limite le nombre de requêtes autorisées par intervalle de temps, avec stockage au choix (en mémoire ou Memcached) et en-têtes `X-RateLimit-*` par défaut (ou nouveau format RFC 9421 en option).
 
 ## Code source
 

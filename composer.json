@@ -1,7 +1,7 @@
 {
     "name" : "oihana/php-middleware" ,
     "type" : "library" ,
-    "description" : "Composable PHP middleware helpers — security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy, X-Content-Type-Options), CORS with preflight. PSR-7 compatible, zero magic strings." ,
+    "description" : "Composable PHP middleware helpers — security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy, X-Content-Type-Options), CORS with preflight, CSRF, request-id, maintenance mode, rate limiting. PSR-7 compatible, zero magic strings." ,
     "keywords" : [
         "php" ,
         "http" ,
@@ -11,7 +11,12 @@
         "security-headers" ,
         "cors" ,
         "csp" ,
-        "hsts"
+        "hsts" ,
+        "csrf" ,
+        "request-id" ,
+        "maintenance" ,
+        "rate-limit" ,
+        "rate-limiting"
     ] ,
     "homepage" : "https://github.com/BcommeBois/oihana-php-middleware" ,
     "license" : "MPL-2.0" ,
@@ -41,6 +46,8 @@
             "src/oihana/middleware/helpers/csrf/generateCsrfToken.php" ,
             "src/oihana/middleware/helpers/csrf/verifyCsrfToken.php" ,
             "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
+            "src/oihana/middleware/helpers/rateLimit/enforceRateLimit.php" ,
+            "src/oihana/middleware/helpers/rateLimit/withRateLimitHeaders.php" ,
             "src/oihana/middleware/helpers/requestId/requestIdFromRequest.php" ,
             "src/oihana/middleware/helpers/requestId/withRequestIdHeader.php" ,
             "src/oihana/middleware/helpers/security/buildCspHeader.php" ,
@@ -63,6 +70,9 @@
         "nunomaduro/collision" : "^8.8" ,
         "phpdocumentor/shim"   : "^3.8" ,
         "slim/psr7"            : "^1.7"
+    } ,
+    "suggest" : {
+        "oihana/php-memcached" : "Provides MemcachedRateLimitStore (production-grade backend for enforceRateLimit())."
     } ,
     "minimum-stability" : "dev" ,
     "prefer-stable" : true ,

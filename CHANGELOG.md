@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Rate limiting
+
+- **`enforceRateLimit()`** — fixed-window rate-limit enforcement on PSR-7 requests. Atomic counter keyed on `(KEY_PREFIX, SCOPE?, identity, windowStart)` with deterministic `reset = floor(now/window)*window + window`. Identity resolved verbatim from `KEY` (string), via callable `fn(ServerRequestInterface): string`, or by fallback to the client IP from `oihana\http\helpers\ips\getClientIp()` — `'unknown'` sentinel used when no usable address is found so the helper never silently degrades. Returns an immutable `RateLimitDecision` (`allowed`, `limit`, `remaining`, `reset`, `retryAfter`) — caller stays responsible for the 429 body and the `Content-Type`.
+- **`withRateLimitHeaders()`** — stamps `Limit / Remaining / Reset` on the response from a `RateLimitDecision`, plus `Retry-After` when the decision is blocked. Defaults to the legacy `X-RateLimit-*` family (aligned with existing oihana/api convention and most client tooling), opt-in to the RFC 9421 draft `RateLimit-*` family via the `rfc9421: true` flag. PSR-7 immutable.
+- **`RateLimitStore`** interface — single atomic method `increment(string $key, int $window): int`. On initial creation the counter is seeded at `1` with a TTL of `$window` seconds; the TTL is anchored on the first request, not extended on subsequent increments. Fits every production backend that exposes atomic increment-with-TTL (Memcached, Redis, APCu).
+- **`InMemoryRateLimitStore`** — process-local implementation shipped for tests, CLI scripts, single-process tools and demos. Not thread-safe nor shared across workers — explicitly documented as not for production HTTP traffic. Accepts an optional clock callable for deterministic time travel in tests.
+- **`RateLimitDecision`** — readonly value object returned by `enforceRateLimit()`. Plain DTO, no methods.
+- **`RateLimitOption`** enum — 6 typed constants (`LIMIT`, `WINDOW`, `KEY`, `KEY_PREFIX`, `SCOPE`, `NOW`) for the option keys. Invalid `LIMIT` / `WINDOW` / `KEY_PREFIX` fall back to safe defaults.
+- **Out of scope on purpose** — no rule resolution by path / method (caller decides), no multi-counter combination (call `enforceRateLimit()` twice with two scopes), no JWT decode / DB lookup (use the `KEY` callable), no 429 body opinion. Token bucket / sliding window deliberately deferred to a future helper.
+- **Memcached adapter** — `oihana/php-memcached` will ship `MemcachedRateLimitStore` consuming this interface. Added as a `suggest` entry in `composer.json` — no hard dependency, no extension required on `oihana/php-middleware` itself.
+
+### Documentation
+
+- Bilingual wiki page `rate-limiting.md` (FR + EN) added with options table, header families table, identity resolution table, store-choice matrix, Slim middleware recipe and out-of-scope section. TOCs in both `wiki/{fr,en}/README.md` updated.
+
 ## [0.2.0] - 2026-05-27
 
 Second release. Three new helper families added on top of v0.1.0: CSRF (signed double-submit pattern), Request ID (X-Request-Id propagation with conservative validation), and Maintenance mode (clean 503 response with Retry-After). 6 new procedural helpers, 3 new typed enums, 53 new tests (115 total / 234 assertions). Bilingual FR/EN wiki extended with three dedicated pages. No breaking change on the v0.1.0 surface.
