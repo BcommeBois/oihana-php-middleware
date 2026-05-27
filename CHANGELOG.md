@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Maintenance mode
+
+- **`respondMaintenanceMode()`** — turns a PSR-7 response into a clean `503 Service Unavailable` with optional `Retry-After` header and body. `Retry-After` accepts `int` (delta-seconds), `DateTimeInterface` (formatted as IMF-fixdate via `oihana\http\helpers\dates\formatHttpDate()`), or non-empty `string` (passed through). Body emitted only when `MESSAGE` option is supplied, with `Content-Type` defaulting to `text/plain; charset=utf-8`. Pre-existing unrelated response headers are preserved.
+- **`MaintenanceOption`** enum — 3 typed constants (`RETRY_AFTER`, `MESSAGE`, `CONTENT_TYPE`) for the option keys.
+
 ### Request ID
 
 - **`requestIdFromRequest()`** — reads the `X-Request-Id` from the incoming request and returns it when it passes a conservative shape check (1 to 128 chars, URL-safe alphabet `[A-Za-z0-9_-]`); otherwise generates a fresh 128-bit base64url identifier via `oihana\core\encoding\randomBase64Url()`. Defense-in-depth against log-pollution and header-injection attacks via a forged incoming header.

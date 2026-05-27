@@ -40,6 +40,7 @@
             "src/oihana/middleware/helpers/cors/applyCorsHeaders.php" ,
             "src/oihana/middleware/helpers/csrf/generateCsrfToken.php" ,
             "src/oihana/middleware/helpers/csrf/verifyCsrfToken.php" ,
+            "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
             "src/oihana/middleware/helpers/requestId/requestIdFromRequest.php" ,
             "src/oihana/middleware/helpers/requestId/withRequestIdHeader.php" ,
             "src/oihana/middleware/helpers/security/buildCspHeader.php" ,

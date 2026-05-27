@@ -56,6 +56,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[CORS](cors.md)** — `applyCorsHeaders` avec preflight, allowlist, credentials, exposed-headers, enum `CorsOption`.
 - **[CSRF](csrf.md)** — `generateCsrfToken`, `verifyCsrfToken`, enum `CsrfField`. Pattern signed double-submit stateless, HMAC-SHA256, TTL optionnel.
 - **[Request ID](request-id.md)** — `requestIdFromRequest`, `withRequestIdHeader`, enum `RequestIdField`. Propagation `X-Request-Id` avec validation conservatrice de l'en-tête entrant.
+- **[Mode maintenance](maintenance.md)** — `respondMaintenanceMode`, enum `MaintenanceOption`. Réponse 503 propre avec `Retry-After` (int / DateTime / string) et body optionnel.
 
 ## Code source
 
