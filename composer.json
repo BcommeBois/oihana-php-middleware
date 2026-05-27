@@ -1,0 +1,66 @@
+{
+    "name" : "oihana/php-middleware" ,
+    "type" : "library" ,
+    "description" : "Composable PHP middleware helpers — security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy, X-Content-Type-Options), CORS with preflight. PSR-7 compatible, zero magic strings." ,
+    "keywords" : [
+        "php" ,
+        "http" ,
+        "middleware" ,
+        "psr-7" ,
+        "security" ,
+        "security-headers" ,
+        "cors" ,
+        "csp" ,
+        "hsts"
+    ] ,
+    "homepage" : "https://github.com/BcommeBois/oihana-php-middleware" ,
+    "license" : "MPL-2.0" ,
+    "authors" : [
+        {
+            "name"     : "Marc Alcaraz" ,
+            "email"    : "marc@ooop.fr" ,
+            "homepage" : "https://www.ooop.fr" ,
+            "role"     : "Project Founder, Lead Developer."
+        }
+    ] ,
+    "support" : {
+        "email"  : "marc@ooop.fr" ,
+        "issues" : "https://github.com/BcommeBois/oihana-php-middleware/issues" ,
+        "source" : "https://github.com/BcommeBois/oihana-php-middleware"
+    } ,
+    "scripts" : {
+        "doc"  : "rm -rf docs && mkdir docs && cp -r assets docs/assets && ./vendor/bin/phpdoc -c phpdoc.xml -v" ,
+        "test" : "./vendor/bin/phpunit"
+    } ,
+    "autoload" : {
+        "psr-4" : {
+            "oihana\\middleware\\" : "src/oihana/middleware"
+        } ,
+        "files" : [
+        ]
+    } ,
+    "autoload-dev" : {
+        "psr-4" : {
+            "tests\\oihana\\middleware\\" : "tests/oihana/middleware"
+        }
+    } ,
+    "require" : {
+        "php"                  : ">=8.4" ,
+        "psr/http-message"     : "^2.0" ,
+        "oihana/php-enums"     : "dev-main" ,
+        "oihana/php-http"      : "^1.0"
+    } ,
+    "require-dev" : {
+        "phpunit/phpunit"      : "^12" ,
+        "nunomaduro/collision" : "^8.8" ,
+        "phpdocumentor/shim"   : "^3.8" ,
+        "slim/psr7"            : "^1.7"
+    } ,
+    "minimum-stability" : "dev" ,
+    "prefer-stable" : true ,
+    "config" : {
+        "allow-plugins" : {
+            "phpdocumentor/shim" : true
+        }
+    }
+}
