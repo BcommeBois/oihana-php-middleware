@@ -15,9 +15,9 @@ class MaintenanceOption
     use ConstantsTrait ;
 
     /**
-     * `retryAfter` — `Retry-After` header value. Accepts `int` (delta seconds), `DateTimeInterface` (formatted as IMF-fixdate), or non-empty `string` (passed through verbatim). Omitted or `null` ⇒ no header.
+     * `contentType` — `Content-Type` header value emitted when a `message` is supplied. Defaults to `text/plain; charset=utf-8`.
      */
-    public const string RETRY_AFTER = 'retryAfter' ;
+    public const string CONTENT_TYPE = 'contentType' ;
 
     /**
      * `message` — body message written to the response. Omitted, `null` or empty string ⇒ no body.
@@ -25,7 +25,7 @@ class MaintenanceOption
     public const string MESSAGE = 'message' ;
 
     /**
-     * `contentType` — `Content-Type` header value emitted when a `message` is supplied. Defaults to `text/plain; charset=utf-8`.
+     * `retryAfter` — `Retry-After` header value. Accepts `int` (delta seconds), `DateTimeInterface` (formatted as IMF-fixdate), or non-empty `string` (passed through verbatim). Omitted or `null` ⇒ no header.
      */
-    public const string CONTENT_TYPE = 'contentType' ;
+    public const string RETRY_AFTER = 'retryAfter' ;
 }
