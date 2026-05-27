@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CSRF
+
+- **`generateCsrfToken()`** — issues a signed stateless CSRF token suitable for the double-submit pattern. Wire format `<id>.<exp>.<sig>`: a 128-bit base64url random `<id>` (CSPRNG from `oihana\core\encoding\randomBase64Url()`), an absolute Unix expiry timestamp `<exp>` (`'0'` when no TTL), and a base64url HMAC-SHA256 `<sig>` keyed by the supplied secret. Optional `$ttlSeconds` argument; `null` or `0` ⇒ no expiry. Throws `InvalidArgumentException` when the secret is empty.
+- **`verifyCsrfToken()`** — verifies a token issued by `generateCsrfToken()` against the cookie / submitted pair. Checks: constant-time byte equality of the two tokens, three-part wire format, constant-time HMAC verification, TTL when present. Returns `bool` — never throws — so it can be plugged as the sole allow/deny gate.
+- **`CsrfField`** enum — `COOKIE_NAME = 'csrf'`, `HEADER_NAME = 'X-CSRF-Token'`. Conventional default field names for wiring the double-submit pattern.
+
 ## [0.1.0] - 2026-05-27
 
 First public release. Composable PHP middleware helpers for HTTP security: 3 procedural helpers (`withSecurityHeaders`, `buildCspHeader`, `applyCorsHeaders`) and 5 typed enums (`SecurityHeadersOption`, `ReferrerPolicy`, `FrameOptions`, `CspDirective`, `CorsOption`). PSR-7 compatible, zero magic strings, designed to slot into any PSR-15 middleware (Slim, Mezzio, Laminas, etc.) without imposing a framework. 62 PHPUnit tests, 137 assertions. Bilingual FR/EN wiki shipped from day one.
