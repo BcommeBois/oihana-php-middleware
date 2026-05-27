@@ -1,5 +1,7 @@
 # Oihana PHP Middleware
 
+![Oihana PHP Middleware](https://raw.githubusercontent.com/BcommeBois/oihana-php-middleware/main/assets/images/oihana-php-middleware-logo-inline-512x160.png)
+
 Composable PHP HTTP middleware helpers. Part of the **Oihana PHP** ecosystem, this package ships procedural helpers to build typed security-headers responses and apply CORS with preflight handling — PSR-7 compatible, zero magic strings.
 
 [![Latest Version](https://img.shields.io/packagist/v/oihana/php-middleware.svg?style=flat-square)](https://packagist.org/packages/oihana/php-middleware)
