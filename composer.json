@@ -37,7 +37,8 @@
             "oihana\\middleware\\" : "src/oihana/middleware"
         } ,
         "files" : [
-            "src/oihana/middleware/helpers/security/buildCspHeader.php"
+            "src/oihana/middleware/helpers/security/buildCspHeader.php" ,
+            "src/oihana/middleware/helpers/security/withSecurityHeaders.php"
         ]
     } ,
     "autoload-dev" : {

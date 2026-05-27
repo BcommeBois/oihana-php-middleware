@@ -64,5 +64,7 @@ Licensed under the [Mozilla Public License 2.0 (MPL‑2.0)](https://www.mozilla.
 
 ## 🔗 Related packages
 
-- `oihana/php-http` – composable PHP HTTP primitives (client IP detection, signed URLs, cookies, content negotiation, …) consumed by this library: `https://github.com/BcommeBois/oihana-php-http`
-- `oihana/php-enums` – typed HTTP constants (`HttpHeader`, …): `https://github.com/BcommeBois/oihana-php-enums`
+| Package | Description |
+| :--- | :--- |
+| [`oihana/php-http`](https://github.com/BcommeBois/oihana-php-http) | Composable PHP HTTP primitives (client IP detection, signed URLs, cookies, content negotiation, …) consumed by this library. |
+| [`oihana/php-enums`](https://github.com/BcommeBois/oihana-php-enums) | Typed HTTP constants (`HttpHeader`, …). |
