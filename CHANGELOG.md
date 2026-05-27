@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-27
+
+Third release. One new helper family added on top of v0.2.0: Rate limiting (fixed-window quota enforcement on PSR-7 requests with a pluggable store backend). 2 new procedural helpers (`enforceRateLimit`, `withRateLimitHeaders`), 1 new interface (`RateLimitStore`), 2 new classes (`InMemoryRateLimitStore`, `RateLimitDecision`), 1 new typed enum (`RateLimitOption`), 26 new tests (141 total / 301 assertions). Bilingual FR/EN wiki extended with a dedicated page. Memcached-backed store added as a `composer.json` `suggest` (shipped separately in `oihana/php-memcached`). No breaking change on the v0.2.0 surface.
+
 ### Rate limiting
 
 - **`enforceRateLimit()`** — fixed-window rate-limit enforcement on PSR-7 requests. Atomic counter keyed on `(KEY_PREFIX, SCOPE?, identity, windowStart)` with deterministic `reset = floor(now/window)*window + window`. Identity resolved verbatim from `KEY` (string), via callable `fn(ServerRequestInterface): string`, or by fallback to the client IP from `oihana\http\helpers\ips\getClientIp()` — `'unknown'` sentinel used when no usable address is found so the helper never silently degrades. Returns an immutable `RateLimitDecision` (`allowed`, `limit`, `remaining`, `reset`, `retryAfter`) — caller stays responsible for the 429 body and the `Content-Type`.
@@ -81,6 +85,7 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.3.0
 [0.2.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.2.0
 [0.1.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.1.0
