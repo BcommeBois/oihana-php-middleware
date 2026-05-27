@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-27
+
+Second release. Three new helper families added on top of v0.1.0: CSRF (signed double-submit pattern), Request ID (X-Request-Id propagation with conservative validation), and Maintenance mode (clean 503 response with Retry-After). 6 new procedural helpers, 3 new typed enums, 53 new tests (115 total / 234 assertions). Bilingual FR/EN wiki extended with three dedicated pages. No breaking change on the v0.1.0 surface.
+
 ### Maintenance mode
 
 - **`respondMaintenanceMode()`** — turns a PSR-7 response into a clean `503 Service Unavailable` with optional `Retry-After` header and body. `Retry-After` accepts `int` (delta-seconds), `DateTimeInterface` (formatted as IMF-fixdate via `oihana\http\helpers\dates\formatHttpDate()`), or non-empty `string` (passed through). Body emitted only when `MESSAGE` option is supplied, with `Content-Type` defaulting to `text/plain; charset=utf-8`. Pre-existing unrelated response headers are preserved.
@@ -62,5 +66,6 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.2.0
 [0.1.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.1.0
