@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-28
+
+Fifth release. Tier 3 observability + bonus utilities on top of v0.4.0: response time stamping, content negotiation, CORS predicates and an opinionated default security baseline. 5 new procedural helpers (`withResponseTime`, `negotiateMimeType`, `isCorsRequest`, `isCorsPreflight`, `withDefaultSecurityBaseline`), 1 new typed enum (`ResponseTimeOption`), 2 new sub-namespaces (`helpers/observability/`, `helpers/negotiation/`), 31 new tests (196 total / 384 assertions). Two new bilingual FR/EN wiki pages (`observability.md`, `content-negotiation.md`) plus extensions of `cors.md` and `security-headers.md`. Main `README.md` "What you can do" section refreshed to reflect every helper family shipped since v0.1.0. No breaking change on the v0.4.0 surface.
+
 ### Observability
 
 - **`withResponseTime()`** — new procedural helper that stamps the elapsed processing time on a PSR-7 response. Two output formats : the de-facto `X-Response-Time: 42.50ms` family (default, Express / Koa convention) and the W3C standard `Server-Timing: total;dur=42.50` family (opt-in via `ResponseTimeOption::USE_SERVER_TIMING`, parsed natively by Chromium / Firefox DevTools and most APM ingesters). Configurable decimal precision and metric name. Duration computed from a caller-supplied `microtime(true)` reference. Negative durations (clock skew, future start time) clamped to `0.00`. PSR-7 immutable.
@@ -135,7 +139,8 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.5.0
 [0.4.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.4.0
 [0.3.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.3.0
 [0.2.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.2.0
