@@ -1,5 +1,29 @@
 # Mode maintenance
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Tu déploies une migration de schéma de base de données qui prend 90 secondes (reconstruction d'un gros index, split d'une table, n'importe quoi de plus lourd qu'un `ALTER` sur une ligne). Pendant cette fenêtre, ton code applicatif est toujours debout et écoute, mais chaque requête qui touche la table en migration lève un deadlock ou un « relation does not exist ». La cascade côté utilisateur :
+
+- **L'utilisateur** voit un `500 Internal Server Error` générique. Il ne sait pas si c'est un glitch ou si ton site est cassé. Il rafraîchit. Il rafraîchit encore. Il ouvre un second onglet. Il rafraîchit aussi.
+- **Son navigateur** (et la logique de retry de ton front) traite le `500` comme une erreur transitoire qu'il faut retenter — donc chaque rafraîchissement déclenche N requêtes échouées de plus.
+- **Ton appli mobile** a une logique retry-with-exponential-backoff, mais elle parse le `500` différemment du `503` — certains clients bombardent le serveur, d'autres entrent dans un état cassé qui nécessite un redémarrage de l'app.
+- **Ton error tracker** ingère des milliers de 500 identiques en 90 secondes. Ton on-call est notifié. Tu perds 10 minutes à confirmer « oui c'est la migration, pas une vraie panne ».
+
+**Avec le mode maintenance**, tu actives un flag (variable d'env, fichier sentinelle, feature flag) en haut de ta pile. Chaque requête reçoit un :
+
+```
+HTTP/1.1 503 Service Unavailable
+Retry-After: 120
+
+Service en maintenance programmée, retour dans 2 minutes.
+```
+
+Les navigateurs et les clients HTTP bien élevés **comprennent `503 + Retry-After`** — ils attendent puis retentent après le délai annoncé, au lieu de traiter ça comme une erreur permanente. Les applis mobiles qui respectent la sémantique HTTP mettent la requête en file et la rejouent automatiquement. Ton error tracker voit un seul event « maintenance annoncée » au lieu d'une avalanche. Et l'utilisateur voit la vraie raison au lieu de deviner.
+
+Le helper s'occupe uniquement de **produire** la réponse 503. **Détecter** l'état de maintenance (variable d'env, fichier sentinelle, hook de déploiement, feature flag) et **contourner** la maintenance pour un endpoint d'admin qui doit rester joignable — ça reste le travail de ton middleware.
+
+---
+
 `oihana/php-middleware` fournit un helper procédural pour répondre proprement quand ton application est en maintenance :
 
 ```php

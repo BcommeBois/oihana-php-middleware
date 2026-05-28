@@ -1,5 +1,26 @@
 # Request ID — trace correlation
 
+## Why you would want this — a concrete scenario
+
+A user writes to your support : *"My CSV export crashed this morning around 9:42."*
+
+You open your logs. Between 9:40 and 9:45, **47 `/exports` requests** went through. Six returned errors. Some belong to the user (their company has a shared IP behind a corporate proxy, so filtering by IP returns three different humans). You can guess based on the timestamp and the user agent, but you're never 100% sure which error was hers. You burn 15 minutes cross-referencing and still email her a "could you give us a bit more detail?".
+
+**With request-id**, your server stamps every response with `X-Request-Id: r4qH3yKp9N0c-XZ7M8sWQg` and your error page tells the user :
+
+```
+Sorry, something went wrong.
+Reference for support: r4qH3yKp9N0c-XZ7M8sWQg
+```
+
+She gives you that ID. You paste it into your log aggregator's search bar. **One result** : the exact request, the stack trace, the failing query, the input payload. 5 seconds.
+
+The same ID is on every log line your server wrote while processing that request — controller, services, database, third-party HTTP calls — so you can read the full causal chain top-to-bottom.
+
+When you DON'T need this : nothing. Even a monolith benefits — the cost is one helper call per request and a few extra bytes in the response. For distributed architectures with multiple services calling each other, see [Distributed tracing](tracing.md) instead (W3C Trace Context, with the same idea propagated across service boundaries).
+
+---
+
 `oihana/php-middleware` ships two procedural helpers to set up clean **request ID** propagation across your API:
 
 - [`requestIdFromRequest()`](#requestidfromrequest) — reads (or generates) the ID carried by an incoming `X-Request-Id`.

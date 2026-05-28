@@ -1,5 +1,25 @@
 # CORS
 
+## Why you would want this — a concrete scenario
+
+You build a React frontend at `https://app.example.com` that fetches user data from your API at `https://api.example.com/users`. Your API works perfectly in Postman, returns clean JSON. You hit the same URL from your frontend, the request fires, and the browser's DevTools console screams :
+
+```
+Access to fetch at 'https://api.example.com/users' from origin
+'https://app.example.com' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+The response actually arrived from the server. The **browser** is the one refusing to hand it over to your JavaScript, because the API and the frontend live on different origins and the server hasn't explicitly said "this origin is allowed". CORS is the browser's permission system for cross-origin reads — without the right response headers, your API is invisible to your own SPA.
+
+It gets trickier for "non-simple" requests (anything that's not a plain `GET` / `POST` with simple headers — so basically any modern API call with `Authorization`, JSON body, custom headers). The browser sends an `OPTIONS` **preflight** first to ask the server which methods and headers are allowed. If the preflight fails or returns the wrong headers, your real request never even fires.
+
+And there's a classic trap : setting `Access-Control-Allow-Origin: *` together with credentials (cookies, auth headers) — browsers **reject this combo silently**. Your API looks configured, your DevTools shows the headers, and yet the request still fails.
+
+`applyCorsHeaders()` handles the allowlist + preflight + `Vary: Origin` mechanics, and throws at startup time if you fall into the `*` + credentials trap.
+
+---
+
 `oihana/php-middleware` ships a single procedural helper to handle CORS end-to-end:
 
 ```php

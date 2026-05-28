@@ -1,5 +1,30 @@
 # Limitation de débit (rate limiting)
 
+## Pourquoi tu en aurais besoin — deux scénarios concrets
+
+**Brute-force sur la connexion.** Un attaquant découvre ton endpoint `/auth/login`. Il commence à tester **1000 mots de passe par minute** contre `admin@tasociete.com` depuis un botnet de 50 IP (donc ~20 tentatives par IP par minute, assez bas pour passer pour du bruit). Sans limitation de débit :
+
+- Chaque tentative atteint ton controller d'auth, ta base de données, ta fonction de hash de mot de passe (`password_verify()` est volontairement lent — 50 à 200 ms).
+- En une heure, ça fait 60 000 tentatives. Soit il devine le mot de passe, soit il sature ton pool de connexions DB, soit ton hasher monopolise le CPU et le reste de ton app timeout.
+- Ton log de sécurité montre des centaines d'auths échouées, mélangées à des utilisateurs légitimes qui se trompent. Dur de séparer.
+
+Avec une limitation à **5 tentatives par IP par minute** sur `/auth/login` :
+
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 47
+X-RateLimit-Limit: 5
+X-RateLimit-Remaining: 0
+```
+
+L'attaque s'arrête à la 6ᵉ tentative par IP. Un utilisateur légitime qui se trompe trois fois de suite de mot de passe voit un « trop de tentatives, réessaie dans une minute » — pas de verrouillage permanent, pas de captcha, juste une pause d'une minute.
+
+**Script emballé qui consomme ton quota.** Un partenaire d'intégration entre par accident dans une boucle infinie qui appelle ton endpoint `/api/orders` 100 fois par seconde. Sans limitation de débit, ce seul cron mal configuré consomme tout ton budget de lecture sur le replica de base de données en 20 minutes et dégrade l'expérience de tous les autres clients. Avec une limitation par clé d'API, l'emballement est plafonné à son propre quota et personne d'autre n'est affecté.
+
+Le helper est la **décision**, pas la réponse. Tu fournis un store (en mémoire pour les tests, Memcached pour la prod), le helper vérifie « cette clé a-t-elle dépassé son quota sur cette fenêtre ? », retourne un `RateLimitDecision`. C'est toi qui décide quoi faire en cas de `!$allowed` — typiquement un `429` avec un message clair, mais ça pourrait aussi être « laisse passer mais log un warning » ou « dégrade la qualité de la réponse » selon ta politique.
+
+---
+
 `oihana/php-middleware` fournit un helper procédural pour appliquer une politique de rate-limit à fenêtre fixe sur les requêtes PSR-7 :
 
 ```php

@@ -1,5 +1,29 @@
 # Maintenance mode
 
+## Why you would want this — a concrete scenario
+
+You ship a database schema migration that takes 90 seconds (rebuilding a large index, splitting a table, anything heavier than a one-row ALTER). During that window your app code is still up and listening, but every query that touches the migrating table throws a deadlock or a "relation does not exist". The user experience cascade :
+
+- **The user** sees a generic `500 Internal Server Error`. They don't know if it's a glitch or if your site is broken. They refresh. They refresh again. They open a second tab. They refresh that too.
+- **Their browser** (and your front-end retry logic) treats `500` as a transient error worth retrying — so every refresh fires N more failing requests.
+- **Your mobile app** has retry-with-exponential-backoff logic, but it parses `500` differently than `503` — some clients hammer the server, others enter a broken state requiring an app restart.
+- **Your error tracker** ingests thousands of identical 500s in 90 seconds. Your on-call gets paged. You waste 10 minutes confirming "yes this is the migration, not a real outage".
+
+**With maintenance mode**, you flip a flag (env var, sentinel file, feature flag) at the top of your stack. Every request gets a clean :
+
+```
+HTTP/1.1 503 Service Unavailable
+Retry-After: 120
+
+Service under scheduled maintenance, back in 2 minutes.
+```
+
+Browsers and well-behaved HTTP clients **understand `503 + Retry-After`** — they back off and retry after the announced delay instead of treating it as a permanent error. Mobile apps that respect HTTP semantics queue the request and try again automatically. Your error tracker sees a single "maintenance announced" event instead of a flood. And the user sees the actual reason instead of guessing.
+
+The helper is purely about **producing** the 503 response. **Detecting** the maintenance state (env var, sentinel file, deploy hook, feature flag) and **bypassing** it for an admin endpoint that needs to remain reachable — both stay your middleware's job.
+
+---
+
 `oihana/php-middleware` ships a procedural helper to respond cleanly when your application is under maintenance:
 
 ```php

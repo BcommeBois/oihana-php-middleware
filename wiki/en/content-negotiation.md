@@ -1,5 +1,45 @@
 # Content negotiation
 
+## Why you would want this — a concrete scenario
+
+Your `/api/users` endpoint is consumed by :
+
+- **The React frontend** that wants JSON to render a user list.
+- **The finance analyst** who exports the same data to Excel — they want CSV.
+- **A future RSS reader** somebody on your team will build next quarter — they want XML.
+
+Three different MIME types, one URL, one set of data. Two ways to handle it :
+
+**Without content negotiation** — you sprinkle a `?format=json` query parameter everywhere :
+
+```
+GET /api/users?format=json
+GET /api/users?format=csv
+GET /api/users?format=xml
+```
+
+Now you also need to handle bad values (`?format=html`), normalize aliases (`xls` vs `excel` vs `csv`), document the param on every endpoint, sync the list between backend and frontend. And HTTP caches will treat each format as a different URL — fragmenting your CDN cache.
+
+**With content negotiation**, the client just tells you what it accepts via the standard HTTP `Accept` header :
+
+```
+GET /api/users
+Accept: application/json
+```
+
+```
+GET /api/users
+Accept: text/csv;q=1.0, application/json;q=0.5
+```
+
+Same URL, multiple representations, standard HTTP. The `Vary: Accept` mechanism lets your CDN cache each variant correctly. Quality values (`q=0.9`) let clients express preferences. Wildcards (`text/*`) let them say "any text format you have".
+
+`negotiateMimeType()` reads the `Accept` header, matches against the list of MIME types your server can actually produce, returns the best match. You then pick the right serializer / template / formatter and respond with the matching `Content-Type`.
+
+When this is **not** useful : if your endpoint serves a single representation (only ever JSON), the negotiation is overhead — just set `Content-Type: application/json` and move on.
+
+---
+
 `oihana/php-middleware` ships a thin PSR-7 wrapper to select the best server-side MIME type from a client `Accept` header:
 
 ```php

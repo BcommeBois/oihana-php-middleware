@@ -1,5 +1,30 @@
 # Rate limiting
 
+## Why you would want this — two concrete scenarios
+
+**Login brute-force.** An attacker discovers your `/auth/login` endpoint. They start firing **1000 password attempts per minute** against `admin@yourcompany.com` from a botnet of 50 IPs (so ~20 attempts per IP per minute, low enough to look like noise). Without rate limiting :
+
+- Every attempt hits your auth controller, your database, your password hasher (`password_verify()` is intentionally slow — 50-200ms).
+- Within an hour, that's 60 000 password attempts. Either they guess the password, or they exhaust your DB connection pool, or your password hasher pegs the CPU and the rest of your app times out.
+- Your security log shows hundreds of failed auths, mixed in with legitimate users mistyping their password. Hard to separate.
+
+With rate limiting at **5 attempts per IP per minute** on `/auth/login` :
+
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 47
+X-RateLimit-Limit: 5
+X-RateLimit-Remaining: 0
+```
+
+The attack stops at attempt 6 per IP. A legitimate user who fat-fingers their password three times in a row sees a friendly "too many attempts, try again in a minute" — not a permanent lockout, not a captcha, just a one-minute pause.
+
+**Runaway script consuming your quota.** A partner integration accidentally goes into an infinite loop calling your `/api/orders` endpoint 100 times per second. Without rate limiting, that single misconfigured cron blows through your database read replica budget in 20 minutes and degrades every other customer's experience. With a per-API-key rate limit, the runaway is capped at its own quota and everybody else stays unaffected.
+
+The helper is the **decision**, not the response. You provide a store (in-memory for tests, Memcached for production), the helper checks "has this key exceeded its quota in this window?", returns a `RateLimitDecision`. You decide what to do on `!$allowed` — typically a `429` with a friendly message, but it could also be "let it through but log a warning" or "downgrade the response quality" depending on your policy.
+
+---
+
 `oihana/php-middleware` ships a procedural helper to enforce a fixed-window rate-limit policy on PSR-7 requests:
 
 ```php

@@ -1,5 +1,27 @@
 # CSRF — stateless double-submit protection
 
+## Why you would want this — a concrete scenario
+
+Your user is logged into `bank.example.com` (your app). Their browser holds a valid session cookie. They open a second tab and visit `cute-cats.example` — an attacker-controlled site that looks innocent. That page silently contains :
+
+```html
+<form action="https://bank.example.com/transfer" method="POST" id="f">
+  <input name="to"     value="attacker_account"/>
+  <input name="amount" value="10000"/>
+</form>
+<script>document.getElementById( 'f' ).submit() ;</script>
+```
+
+When the page loads, the browser submits the form. **The browser automatically attaches the user's `bank.example.com` session cookie**, because that's what cookies do — they're sent on every request to their origin, regardless of which site triggered the request. Your server sees a perfectly authenticated request to `/transfer` from a logged-in user. The transfer succeeds. The user finds out next month from their bank statement.
+
+This is **Cross-Site Request Forgery** (CSRF). Every state-changing `POST` / `PUT` / `DELETE` is exposed by default. Sessions alone don't protect you — they're the very mechanism the attacker exploits.
+
+The fix : require a token on every mutation that **only your own pages can read**. The attacker's page can submit a form to your domain, but it cannot read your domain's cookies (Same-Origin Policy). So if your server requires "the token in the cookie must match the token submitted in a header", and only your own JavaScript can read the cookie to set that header, an attacker's form submission is missing the header → rejected → 403.
+
+That's the **double-submit cookie** pattern. Adding an HMAC signature on the token (so even a leaked cookie value can't be forged into a valid token by an attacker) gives you a **signed double-submit cookie** — what these helpers implement, statelessly (no server-side session needed).
+
+---
+
 `oihana/php-middleware` ships two procedural helpers for stateless, HMAC-signed CSRF protection:
 
 - [`generateCsrfToken()`](#generatecsrftoken) — issues a signed CSRF token, ready to be set as a cookie AND echoed back to the client.

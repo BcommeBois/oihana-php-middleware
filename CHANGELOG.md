@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- New bilingual wiki page `wiki/{fr,en}/tracing.md` opening on a concrete user-support scenario (500 error → trace id → 5-second debug across 5 microservices) before the API reference. Inaugurates the new pedagogical structure for wiki pages : start with the problem the helper solves (non-specialist-friendly), then move to API + recipe + when-it's-useful + out-of-scope sections. Existing wiki pages will be aligned to this structure in a follow-up lot.
+- New bilingual wiki page `wiki/{fr,en}/tracing.md` opening on a concrete user-support scenario (500 error → trace id → 5-second debug across 5 microservices) before the API reference. Inaugurates the new pedagogical structure for wiki pages : start with the problem the helper solves (non-specialist-friendly), then move to API + recipe + when-it's-useful + out-of-scope sections.
+- **All 8 pre-existing bilingual wiki pages aligned on the same pedagogical structure** in the same release : `security-headers.md` (stolen-cookie + uploaded-jpg-as-JS + injected-script scenarios), `cors.md` (DevTools "blocked by CORS policy" debugging scenario), `csrf.md` (cute-cats.example auto-submits to bank.example.com scenario), `request-id.md` (CSV export failed → reference code → 5-second log lookup), `maintenance.md` (90s DB migration cascade : 500 storm vs clean 503 + Retry-After), `rate-limiting.md` (login brute-force + runaway script scenarios), `observability.md` ("the dashboard feels slow today" — 1.2s endpoint split into 187ms server + 1s network), `content-negotiation.md` (one `/api/users` URL serving React/Excel/RSS). Every page now opens with a concrete "Why you would want this — a scenario" section that a non-specialist can read before diving into the API reference.
 
 ## [0.5.0] - 2026-05-28
 

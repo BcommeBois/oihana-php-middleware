@@ -1,5 +1,27 @@
 # CSRF — protection stateless double-submit
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Ton utilisateur est connecté à `banque.example.com` (ton application). Son navigateur garde un cookie de session valide. Il ouvre un second onglet et visite `chats-mignons.example` — un site contrôlé par un attaquant qui a l'air innocent. Cette page contient discrètement :
+
+```html
+<form action="https://banque.example.com/transfer" method="POST" id="f">
+  <input name="to"     value="compte_attaquant"/>
+  <input name="amount" value="10000"/>
+</form>
+<script>document.getElementById( 'f' ).submit() ;</script>
+```
+
+Quand la page charge, le navigateur soumet le formulaire. **Le navigateur attache automatiquement le cookie de session de `banque.example.com`**, parce que c'est ce que font les cookies — ils sont envoyés sur chaque requête vers leur origine, peu importe quel site a déclenché la requête. Ton serveur voit une requête `/transfer` parfaitement authentifiée d'un utilisateur connecté. Le virement passe. L'utilisateur le découvre le mois suivant sur son relevé bancaire.
+
+C'est le **Cross-Site Request Forgery** (CSRF). Chaque mutation (`POST` / `PUT` / `DELETE`) est exposée par défaut. Les sessions seules ne te protègent pas — elles sont le mécanisme même que l'attaquant exploite.
+
+La parade : exiger sur chaque mutation un token que **seules tes propres pages peuvent lire**. La page de l'attaquant peut soumettre un formulaire vers ton domaine, mais elle ne peut pas lire les cookies de ton domaine (Same-Origin Policy). Donc si ton serveur exige « le token dans le cookie doit matcher le token soumis dans un en-tête », et que seul ton propre JavaScript peut lire le cookie pour positionner cet en-tête, le formulaire de l'attaquant n'a pas l'en-tête → rejeté → 403.
+
+C'est le pattern **double-submit cookie**. Ajouter une signature HMAC sur le token (pour qu'une valeur de cookie même fuitée ne puisse pas être forgée en token valide par un attaquant) donne un **signed double-submit cookie** — ce que ces helpers implémentent, sans état (aucune session côté serveur requise).
+
+---
+
 `oihana/php-middleware` fournit deux helpers procéduraux pour mettre en place une protection CSRF stateless, signée HMAC :
 
 - [`generateCsrfToken()`](#generatecsrftoken) — émet un token CSRF signé, à mettre dans un cookie ET à renvoyer au client.

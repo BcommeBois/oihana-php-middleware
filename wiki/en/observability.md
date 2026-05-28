@@ -1,5 +1,31 @@
 # Observability
 
+## Why you would want this — a concrete scenario
+
+A user reports : *"the dashboard feels slow today."*
+
+You open DevTools, hit the endpoint they mention, see **1.2 seconds** total in the Network tab. Where do those 1.2 seconds go ? Three possibilities :
+
+- **Network round-trip** — slow CDN, slow last-mile, packet loss between user and server.
+- **Server processing** — slow query, slow third-party API, blocked event loop.
+- **Render / parse time** — heavy JSON payload, slow client-side hydration.
+
+Without timing data on the response, you guess. You add temporary `error_log()` calls in your controller, redeploy, ask the user to retry, parse the logs by hand. 30 minutes minimum.
+
+**With `withResponseTime()`**, every response carries the server-side processing time as a header :
+
+```
+X-Response-Time: 187.42ms
+```
+
+DevTools now tells you : 1.2 s total, 187 ms server-side. **1 s is on the wire**, not in your code. Network problem, not application problem. Done in 5 seconds.
+
+For more granular signals, the opt-in `Server-Timing` format is parsed natively by Chromium and Firefox DevTools and surfaces directly in the Network panel — every APM ingester (Datadog, New Relic, Sentry, Honeycomb) reads it too.
+
+When this is **not** useful : pure static-file responses (your server isn't doing work), or when you already have an APM library that injects `Server-Timing` itself.
+
+---
+
 `oihana/php-middleware` ships a procedural helper to stamp the response with the elapsed processing time:
 
 ```php

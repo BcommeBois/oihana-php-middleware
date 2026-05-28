@@ -1,5 +1,26 @@
 # Request ID — corrélation de traces
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Un utilisateur écrit à ton support : *« mon export CSV a planté ce matin vers 9h42. »*
+
+Tu ouvres tes logs. Entre 9h40 et 9h45, **47 requêtes `/exports`** sont passées. Six ont renvoyé une erreur. Certaines appartiennent à l'utilisateur (sa boîte partage une IP derrière un proxy d'entreprise, donc filtrer par IP retourne trois humains différents). Tu peux deviner d'après l'horodatage et le user-agent, mais tu n'es jamais 100 % sûr de l'erreur qui était la sienne. Tu y passes 15 minutes à recroiser et tu finis par lui envoyer un « pourriez-vous nous donner un peu plus de détails ? ».
+
+**Avec un request-id**, ton serveur tamponne chaque réponse avec `X-Request-Id: r4qH3yKp9N0c-XZ7M8sWQg` et ta page d'erreur dit à l'utilisateur :
+
+```
+Désolé, une erreur est survenue.
+Référence pour le support : r4qH3yKp9N0c-XZ7M8sWQg
+```
+
+Il te donne cet ID. Tu le colles dans la barre de recherche de ton agrégateur de logs. **Un seul résultat** : la requête exacte, la stack trace, la query qui a échoué, le payload d'entrée. 5 secondes.
+
+Le même ID est sur chaque ligne de log écrite par ton serveur pendant le traitement de cette requête — controller, services, base de données, appels HTTP tiers — pour que tu puisses lire toute la chaîne causale de bout en bout.
+
+Quand tu n'en as PAS besoin : jamais. Même un monolithe en bénéficie — le coût est un appel de helper par requête et quelques octets de plus dans la réponse. Pour une architecture distribuée avec plusieurs services qui s'appellent, va plutôt voir [Traçage distribué](tracing.md) (W3C Trace Context, même idée propagée à travers les frontières de service).
+
+---
+
 `oihana/php-middleware` fournit deux helpers procéduraux pour mettre en place une propagation propre du **request ID** sur ton API :
 
 - [`requestIdFromRequest()`](#requestidfromrequest) — lit (ou génère) l'ID porté par un `X-Request-Id` entrant.

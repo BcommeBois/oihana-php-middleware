@@ -1,5 +1,31 @@
 # Observabilité
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Un utilisateur signale : *« le dashboard a l'air lent aujourd'hui. »*
+
+Tu ouvres DevTools, tu appelles l'endpoint qu'il mentionne, tu vois **1,2 seconde** au total dans l'onglet Réseau. Où vont ces 1,2 seconde ? Trois possibilités :
+
+- **Aller-retour réseau** — CDN lent, derniers kilomètres lents, perte de paquets entre l'utilisateur et le serveur.
+- **Traitement serveur** — query lente, API tierce lente, event loop bloquée.
+- **Temps de rendu / parsing** — payload JSON lourd, hydratation côté client lente.
+
+Sans données de timing sur la réponse, tu devines. Tu ajoutes des `error_log()` temporaires dans ton controller, tu redéploies, tu demandes à l'utilisateur de retenter, tu parses les logs à la main. 30 minutes minimum.
+
+**Avec `withResponseTime()`**, chaque réponse porte le temps de traitement serveur dans un en-tête :
+
+```
+X-Response-Time: 187.42ms
+```
+
+DevTools t'indique maintenant : 1,2 s au total, 187 ms côté serveur. **1 s est sur le réseau**, pas dans ton code. Problème réseau, pas problème applicatif. Réglé en 5 secondes.
+
+Pour des signaux plus fins, le format `Server-Timing` en option est parsé nativement par les DevTools de Chromium et Firefox et s'affiche directement dans le panneau Réseau — chaque ingesteur APM (Datadog, New Relic, Sentry, Honeycomb) le lit aussi.
+
+Quand ce n'est **pas** utile : pour des réponses purement statiques (ton serveur ne travaille pas), ou quand tu as déjà une lib APM qui injecte `Server-Timing` toute seule.
+
+---
+
 `oihana/php-middleware` fournit un helper procédural qui marque la réponse avec le temps de traitement écoulé :
 
 ```php

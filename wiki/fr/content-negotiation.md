@@ -1,5 +1,45 @@
 # Négociation de contenu
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Ton endpoint `/api/users` est consommé par :
+
+- **Le frontend React** qui veut du JSON pour afficher une liste d'utilisateurs.
+- **L'analyste finance** qui exporte les mêmes données vers Excel — il veut du CSV.
+- **Un futur lecteur RSS** que quelqu'un dans ton équipe va construire le trimestre prochain — il veut du XML.
+
+Trois types MIME différents, une URL, un même jeu de données. Deux façons de gérer ça :
+
+**Sans négociation de contenu** — tu sèmes un paramètre de query `?format=json` partout :
+
+```
+GET /api/users?format=json
+GET /api/users?format=csv
+GET /api/users?format=xml
+```
+
+Du coup tu dois aussi gérer les valeurs incorrectes (`?format=html`), normaliser les alias (`xls` vs `excel` vs `csv`), documenter le paramètre sur chaque endpoint, synchroniser la liste entre backend et frontend. Et les caches HTTP traiteront chaque format comme une URL différente — fragmentation de ton cache CDN.
+
+**Avec la négociation de contenu**, le client te dit simplement ce qu'il accepte via l'en-tête HTTP standard `Accept` :
+
+```
+GET /api/users
+Accept: application/json
+```
+
+```
+GET /api/users
+Accept: text/csv;q=1.0, application/json;q=0.5
+```
+
+Même URL, plusieurs représentations, HTTP standard. Le mécanisme `Vary: Accept` permet à ton CDN de cacher correctement chaque variante. Les quality values (`q=0.9`) permettent au client d'exprimer ses préférences. Les wildcards (`text/*`) lui permettent de dire « n'importe quel format texte ».
+
+`negotiateMimeType()` lit l'en-tête `Accept`, le matche contre la liste des types MIME que ton serveur sait produire, retourne le meilleur match. Tu choisis ensuite le bon serializer / template / formatter et tu réponds avec le `Content-Type` correspondant.
+
+Quand ce n'est **pas** utile : si ton endpoint sert une seule représentation (toujours du JSON), la négociation est de l'overhead — pose juste `Content-Type: application/json` et passe à autre chose.
+
+---
+
 `oihana/php-middleware` fournit un wrapper PSR-7 léger pour choisir le meilleur type MIME côté serveur à partir d'un en-tête `Accept` client :
 
 ```php

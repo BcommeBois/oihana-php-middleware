@@ -1,5 +1,25 @@
 # CORS
 
+## Pourquoi tu en aurais besoin — un scénario concret
+
+Tu construis un frontend React à `https://app.example.com` qui appelle ton API à `https://api.example.com/users`. Ton API marche parfaitement dans Postman, retourne du JSON propre. Tu appelles la même URL depuis ton frontend, la requête part, et la console DevTools du navigateur crie :
+
+```
+Access to fetch at 'https://api.example.com/users' from origin
+'https://app.example.com' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+La réponse est bien arrivée du serveur. C'est le **navigateur** qui refuse de la donner à ton JavaScript, parce que l'API et le frontend vivent sur des origines différentes et que le serveur n'a pas explicitement dit « cette origine est autorisée ». CORS est le système de permission du navigateur pour les lectures cross-origin — sans les bons en-têtes de réponse, ton API est invisible à ta propre SPA.
+
+Ça devient encore plus subtil pour les requêtes « non simples » (tout ce qui n'est pas un `GET` / `POST` basique avec des en-têtes simples — donc en pratique chaque appel d'API moderne avec `Authorization`, body JSON, en-têtes custom). Le navigateur envoie d'abord un `OPTIONS` **preflight** pour demander au serveur quelles méthodes et quels en-têtes sont autorisés. Si le preflight échoue ou retourne les mauvais en-têtes, ta vraie requête ne part même pas.
+
+Et il y a un piège classique : mettre `Access-Control-Allow-Origin: *` avec des credentials (cookies, en-têtes d'auth) — les navigateurs **rejettent ce combo silencieusement**. Ton API a l'air configurée, tes DevTools montrent les en-têtes, et pourtant la requête échoue toujours.
+
+`applyCorsHeaders()` gère la mécanique allowlist + preflight + `Vary: Origin`, et lève une exception au démarrage si tu tombes dans le piège `*` + credentials.
+
+---
+
 `oihana/php-middleware` fournit un helper procédural unique pour gérer le CORS de bout en bout :
 
 ```php

