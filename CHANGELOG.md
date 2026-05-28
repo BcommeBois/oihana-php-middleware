@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-28
+
+Seventh release. Three thematic helper families on top of v0.6.0 : **API correctness essentials** (Problem Details RFC 9457, request body size limit, generic webhook signature verification), **HTTP caching & content negotiation** (Cache-Control builder, conditional GET with `ETag` / `If-None-Match` / `If-Modified-Since`, three new `Accept-*` negotiation helpers), **defense & API ergonomics** (Host header allowlist, pagination headers RFC 5988 / RFC 8288). 11 new procedural helpers, 2 new value objects (`Problem`, `PaginationLinks`), 3 new typed enums (`ProblemField`, `WebhookSignatureOption`, `CacheDirective`), 96 new tests (317 total / 558 assertions). 6 new bilingual FR/EN wiki pages following the pedagogical pattern (concrete user-facing scenario before the API reference), 2 existing pages extended. No breaking change on the v0.6.0 surface.
+
 ### Trusted hosts defense
 
 - **`enforceTrustedHosts()`** — new procedural helper that checks the incoming `Host` header against an allowlist. Sibling defense to `enforceMaxBodySize()`, targeting Host Header attacks (password-reset poisoning, cache poisoning, virtual-host routing bypass). Lives in the new `oihana\middleware\helpers\host\` namespace. Matching rules : exact match (case-insensitive per RFC 9110 §7.2), wildcard subdomain (`*.example.com` matches `api.example.com` and `staging.api.example.com` but NOT the apex), port stripped from incoming `Host:` before comparison (`example.com:8080` matches `example.com`). Nested or mid-string wildcards rejected as invalid. **Empty allowlist returns `true`** (intentional no-op : guard considered disabled, fails open rather than locking everyone out on a missing config). Missing or malformed `Host` returns `false` (defensive). Two internal helpers (`stripHostPort`, `matchTrustedHost`) exposed for testability.
@@ -212,7 +216,8 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.7.0...HEAD
+[0.7.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.7.0
 [0.6.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.6.0
 [0.5.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.5.0
 [0.4.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.4.0
