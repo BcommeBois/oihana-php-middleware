@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Distributed tracing (W3C Trace Context)
+
+- **`traceContextFromRequest()`** — new procedural helper that resolves the W3C Trace Context for an incoming PSR-7 request. Reads `traceparent` and `tracestate`, validates per W3C §3.2.2.4 (strict 55-char hex shape, version `00`, all-zero sentinels rejected), generates a fresh span id via `random_bytes(8)`, returns the resolved `TraceContext`. **Silent regen on missing or malformed input** — matches the W3C "treat as if no traceparent received" guidance and prevents misconfigured upstream proxies from breaking tracing. Fresh contexts default to `sampled = true` so first-hop traces are never silently dropped.
+- **`withTracingAttribute()`** — stamps the resolved `TraceContext` on the request as a PSR-7 attribute (`traceContext` by default, configurable) so downstream handlers and loggers can read it without re-parsing the header.
+- **`withTraceparentResponseHeader()`** — **opt-in** helper that stamps the resolved `traceparent` on the response. The W3C standard defines `traceparent` as forward-propagation only ; exposing it on the response is a pragmatic choice that lets users / support give the trace id back to debug a failed request in seconds. PSR-7 immutable.
+- **`parseTraceparent()`** — pure W3C parser exposed in `oihana\middleware\tracing\`. Returns the raw components as an associative array (keys exposed as typed constants in `ParsedTraceparentField`) or `null` on any failure (never throws). Decoupled from request handling so it can be unit-tested in isolation and reused outside the middleware context.
+- **`TraceContext`** — readonly value object carrying `traceId` (32 hex chars, inherited end-to-end), `spanId` (16 hex chars, fresh per hop), `parentSpanId`, `sampled`, `tracestate`. Single method `toTraceparent()` that builds the canonical 55-character header value for forwarding to downstream HTTP/DB calls.
+- **`TracingField`** enum — 3 typed constants : `HEADER_TRACEPARENT` (`'traceparent'`), `HEADER_TRACESTATE` (`'tracestate'`), `ATTRIBUTE_NAME` (`'traceContext'`). The two header names duplicate `HttpHeader::TRACEPARENT` / `HttpHeader::TRACESTATE` on purpose to give the tracing family a self-contained local field map.
+- **`ParsedTraceparentField`** enum — 3 typed constants (`TRACE_ID`, `PARENT_SPAN_ID`, `SAMPLED`) documenting the array shape returned by `parseTraceparent()` and consumed by `traceContextFromRequest()`. Keeps producer and consumer in sync without magic strings on either side.
+
+### Documentation
+
+- New bilingual wiki page `wiki/{fr,en}/tracing.md` opening on a concrete user-support scenario (500 error → trace id → 5-second debug across 5 microservices) before the API reference. Inaugurates the new pedagogical structure for wiki pages : start with the problem the helper solves (non-specialist-friendly), then move to API + recipe + when-it's-useful + out-of-scope sections. Existing wiki pages will be aligned to this structure in a follow-up lot.
+
 ## [0.5.0] - 2026-05-28
 
 Fifth release. Tier 3 observability + bonus utilities on top of v0.4.0: response time stamping, content negotiation, CORS predicates and an opinionated default security baseline. 5 new procedural helpers (`withResponseTime`, `negotiateMimeType`, `isCorsRequest`, `isCorsPreflight`, `withDefaultSecurityBaseline`), 1 new typed enum (`ResponseTimeOption`), 2 new sub-namespaces (`helpers/observability/`, `helpers/negotiation/`), 31 new tests (196 total / 384 assertions). Two new bilingual FR/EN wiki pages (`observability.md`, `content-negotiation.md`) plus extensions of `cors.md` and `security-headers.md`. Main `README.md` "What you can do" section refreshed to reflect every helper family shipped since v0.1.0. No breaking change on the v0.4.0 surface.

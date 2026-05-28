@@ -57,7 +57,11 @@
             "src/oihana/middleware/helpers/security/buildCspHeader.php" ,
             "src/oihana/middleware/helpers/security/buildPermissionsPolicyHeader.php" ,
             "src/oihana/middleware/helpers/security/withDefaultSecurityBaseline.php" ,
-            "src/oihana/middleware/helpers/security/withSecurityHeaders.php"
+            "src/oihana/middleware/helpers/security/withSecurityHeaders.php" ,
+            "src/oihana/middleware/helpers/tracing/traceContextFromRequest.php" ,
+            "src/oihana/middleware/helpers/tracing/withTracingAttribute.php" ,
+            "src/oihana/middleware/helpers/tracing/withTraceparentResponseHeader.php" ,
+            "src/oihana/middleware/tracing/parseTraceparent.php"
         ]
     } ,
     "autoload-dev" : {

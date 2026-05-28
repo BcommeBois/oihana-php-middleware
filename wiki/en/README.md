@@ -60,6 +60,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Rate limiting](rate-limiting.md)** — `enforceRateLimit`, `withRateLimitHeaders`, `RateLimitStore` interface, `InMemoryRateLimitStore`, `RateLimitDecision`, `RateLimitOption` enum. Fixed-window quota with pluggable store, legacy `X-RateLimit-*` or RFC 9421 draft headers.
 - **[Observability](observability.md)** — `withResponseTime`, `ResponseTimeOption` enum. Stamps the response with the elapsed processing time as `X-Response-Time` (default) or W3C `Server-Timing` (opt-in).
 - **[Content negotiation](content-negotiation.md)** — `negotiateMimeType`. Thin PSR-7 wrapper over `oihana/php-http`'s `negotiate()` to select the best MIME type from the client `Accept` header.
+- **[Distributed tracing](tracing.md)** — `traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader`, `parseTraceparent`, `TraceContext` value object, `TracingField` enum. W3C Trace Context propagation : trace id shared end-to-end across services so a single user request can be reconstructed in seconds from your log aggregator.
 
 ## Source code
 

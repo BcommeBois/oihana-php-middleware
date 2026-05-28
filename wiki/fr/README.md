@@ -60,6 +60,7 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Limitation de débit](rate-limiting.md)** — `enforceRateLimit`, `withRateLimitHeaders`, interface `RateLimitStore`, `InMemoryRateLimitStore`, `RateLimitDecision`, enum `RateLimitOption`. Limite le nombre de requêtes autorisées par intervalle de temps, avec stockage au choix (en mémoire ou Memcached) et en-têtes `X-RateLimit-*` par défaut (ou nouveau format RFC 9421 en option).
 - **[Observabilité](observability.md)** — `withResponseTime`, enum `ResponseTimeOption`. Marque la réponse avec le temps de traitement écoulé, sous forme `X-Response-Time` (par défaut) ou `Server-Timing` W3C (en option).
 - **[Négociation de contenu](content-negotiation.md)** — `negotiateMimeType`. Wrapper PSR-7 léger autour de `negotiate()` de `oihana/php-http` pour choisir le meilleur type MIME depuis l'en-tête `Accept` du client.
+- **[Traçage distribué](tracing.md)** — `traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader`, `parseTraceparent`, value object `TraceContext`, enum `TracingField`. Propagation W3C Trace Context : un identifiant de trace partagé bout-en-bout entre les services, pour reconstituer toute la chaîne d'événements d'une requête utilisateur en quelques secondes depuis ton agrégateur de logs.
 
 ## Code source
 
