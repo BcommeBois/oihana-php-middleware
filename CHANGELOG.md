@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Problem Details (RFC 9457)
+
+- **`respondProblemDetails()`** — new procedural helper that turns a PSR-7 response into a standardised RFC 9457 (formerly RFC 7807) error response. Sets HTTP status from the `Problem` value object (defaults to `400` when `null`), emits `Content-Type: application/problem+json`, writes the JSON body via `Problem::toArray()` with `JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE` so URI references and non-ASCII titles stay readable. PSR-7 immutable.
+- **`Problem`** — readonly value object with the 5 standard fields (`type`, `title`, `status`, `detail`, `instance` — all `?string`/`?int`, all optional and omitted from the JSON when `null`) plus an `extensions` bag for application-specific keys. `toArray()` honours the RFC field order and silently drops extension entries colliding with standard field names (RFC §3.2 — extensions MUST NOT shadow standard fields). Lives in the new `oihana\middleware\problem\` namespace.
+- **`ProblemField`** enum — 5 typed constants (`TYPE`, `TITLE`, `STATUS`, `DETAIL`, `INSTANCE`) for the standard field names. Exposed so HTTP clients that parse Problem Details responses can share the same constants.
+
+### Request body limit
+
+- **`enforceMaxBodySize()`** — new pure predicate that checks the request `Content-Length` against a caller-supplied `$maxBytes`. Returns `true` when the body fits (or its length is unknown — streaming / chunked), `false` when it exceeds the limit or carries a malformed `Content-Length`. **Strict defensive default on malformed input** (negative, non-numeric, with leading sign or decimal — `ctype_digit`-based check matching the `1*DIGIT` grammar of RFC 9110 §8.6) so a payload bomb can never sneak through under an unverifiable header. Saturation-safe on 64-bit PHP for declared lengths beyond `PHP_INT_MAX`. Lives in the new `oihana\middleware\helpers\body\` namespace.
+
+### Webhook signature verification
+
+- **`verifyWebhookSignature()`** — new procedural helper for the simple-HMAC webhook authentication pattern : HMAC over the raw request body with a shared secret, compared in constant time via `hash_equals()`. Covers GitHub (`X-Hub-Signature-256: sha256=…`), Slack (`X-Slack-Signature: v0=…`), Shopify (`X-Shopify-Hmac-Sha256:` base64), Twilio (`X-Twilio-Signature:` SHA-1 base64), SendGrid (non-signed-timestamp variant), and any in-house webhook that picks up the same convention. **Stripe explicitly out of scope** (timestamp + version blended scheme requires freshness checks — use `stripe/stripe-php`). Short-circuits to `false` on empty secret or empty signature (misconfiguration guard). Unknown `ALGORITHM` falls back to `sha256` ; unknown `ENCODING` falls back to `hex`. Lives in the new `oihana\middleware\helpers\webhook\` namespace.
+- **`WebhookSignatureOption`** enum — 3 typed constants (`ALGORITHM` default `'sha256'`, `PREFIX` default `null`, `ENCODING` default `'hex'`).
+
+### Documentation
+
+- Three new bilingual wiki pages following the pedagogical pattern : `wiki/{fr,en}/problem-details.md` (concrete `"error":"invalid"` vs RFC 9457 scenario), `wiki/{fr,en}/webhooks.md` (forged-GitHub-push scenario + provider compatibility matrix), `wiki/{fr,en}/request-defense.md` (2 GB upload OOM-killer scenario + defense-in-depth stack). TOC entries added to `wiki/{fr,en}/README.md`. The `request-defense.md` page will be extended in Lot C with `enforceTrustedHosts`.
+
 ## [0.6.0] - 2026-05-28
 
 Sixth release. Final Tier 3 piece — W3C Trace Context propagation — plus a wiki-wide pedagogical pass. 3 new procedural helpers (`traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader` opt-in), 1 new pure function (`parseTraceparent`), 1 new value object (`TraceContext`), 2 new typed enums (`TracingField`, `ParsedTraceparentField`), 25 new tests (221 total / 423 assertions). All 8 pre-existing bilingual wiki pages aligned on the new pedagogical structure (concrete user-facing scenario before the API reference) inaugurated by the new `tracing.md` page. No breaking change on the v0.5.0 surface.

@@ -42,6 +42,7 @@
             "oihana\\middleware\\" : "src/oihana/middleware"
         } ,
         "files" : [
+            "src/oihana/middleware/helpers/body/enforceMaxBodySize.php" ,
             "src/oihana/middleware/helpers/cors/applyCorsHeaders.php" ,
             "src/oihana/middleware/helpers/cors/isCorsPreflight.php" ,
             "src/oihana/middleware/helpers/cors/isCorsRequest.php" ,
@@ -50,6 +51,7 @@
             "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateMimeType.php" ,
             "src/oihana/middleware/helpers/observability/withResponseTime.php" ,
+            "src/oihana/middleware/helpers/problem/respondProblemDetails.php" ,
             "src/oihana/middleware/helpers/rateLimit/enforceRateLimit.php" ,
             "src/oihana/middleware/helpers/rateLimit/withRateLimitHeaders.php" ,
             "src/oihana/middleware/helpers/requestId/requestIdFromRequest.php" ,
@@ -61,6 +63,7 @@
             "src/oihana/middleware/helpers/tracing/traceContextFromRequest.php" ,
             "src/oihana/middleware/helpers/tracing/withTracingAttribute.php" ,
             "src/oihana/middleware/helpers/tracing/withTraceparentResponseHeader.php" ,
+            "src/oihana/middleware/helpers/webhook/verifyWebhookSignature.php" ,
             "src/oihana/middleware/tracing/parseTraceparent.php"
         ]
     } ,

@@ -61,6 +61,9 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Observabilité](observability.md)** — `withResponseTime`, enum `ResponseTimeOption`. Marque la réponse avec le temps de traitement écoulé, sous forme `X-Response-Time` (par défaut) ou `Server-Timing` W3C (en option).
 - **[Négociation de contenu](content-negotiation.md)** — `negotiateMimeType`. Wrapper PSR-7 léger autour de `negotiate()` de `oihana/php-http` pour choisir le meilleur type MIME depuis l'en-tête `Accept` du client.
 - **[Traçage distribué](tracing.md)** — `traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader`, `parseTraceparent`, value object `TraceContext`, enum `TracingField`. Propagation W3C Trace Context : un identifiant de trace partagé bout-en-bout entre les services, pour reconstituer toute la chaîne d'événements d'une requête utilisateur en quelques secondes depuis ton agrégateur de logs.
+- **[Problem Details](problem-details.md)** — `respondProblemDetails`, value object `Problem`, enum `ProblemField`. Réponses d'erreur standardisées RFC 9457 (`application/problem+json`) avec champs standards typés plus clés d'extension arbitraires.
+- **[Vérification de signature de webhook](webhooks.md)** — `verifyWebhookSignature`, enum `WebhookSignatureOption`. Pattern simple-HMAC couvrant GitHub, Slack, Shopify, Twilio, SendGrid. Comparaison constant-time, algo / préfixe / encodage configurables.
+- **[Défense des requêtes entrantes](request-defense.md)** — `enforceMaxBodySize` (et `enforceTrustedHosts` plus tard dans la v0.7). Garde-fous pré-parsing qui rejettent les requêtes manifestement mauvaises avant que l'application ait à les gérer.
 
 ## Code source
 
