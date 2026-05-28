@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Observability
+
+- **`withResponseTime()`** — new procedural helper that stamps the elapsed processing time on a PSR-7 response. Two output formats : the de-facto `X-Response-Time: 42.50ms` family (default, Express / Koa convention) and the W3C standard `Server-Timing: total;dur=42.50` family (opt-in via `ResponseTimeOption::USE_SERVER_TIMING`, parsed natively by Chromium / Firefox DevTools and most APM ingesters). Configurable decimal precision and metric name. Duration computed from a caller-supplied `microtime(true)` reference. Negative durations (clock skew, future start time) clamped to `0.00`. PSR-7 immutable.
+- **`ResponseTimeOption`** enum — 3 typed constants (`PRECISION`, `USE_SERVER_TIMING`, `SERVER_TIMING_METRIC`).
+
+### Content negotiation
+
+- **`negotiateMimeType()`** — new procedural helper that selects the best server-side MIME type for an incoming PSR-7 request. Thin PSR-7 adapter over `oihana\http\helpers\negotiation\negotiate()` (from the `oihana/php-http` dependency) which honours RFC 7231 quality values, the standard `Accept` wildcards (universal and `type/*`) and `q=0` explicit refusals. Returns the matched MIME type or a caller-supplied default (or `null`). Power users targeting `Accept-Language` / `Accept-Encoding` / `Accept-Charset` can keep calling `oihana/php-http`'s `negotiate()` directly — this is just a one-line PSR-7 wrapper for the `Accept` case.
+
+### CORS predicates
+
+- **`isCorsRequest()`** — new pure predicate that returns `true` when the request carries an `Origin` header (the de-facto signal of a cross-origin browser request). Useful to short-circuit the CORS branch when the request is same-origin and therefore needs no CORS treatment.
+- **`isCorsPreflight()`** — new pure predicate that returns `true` when the request method is `OPTIONS` AND the request carries an `Access-Control-Request-Method` header. A bare `OPTIONS` (no `Access-Control-Request-Method`) is correctly identified as NOT a preflight, so middlewares don't mistakenly intercept route discovery or server-info probes.
+
+### Security baseline
+
+- **`withDefaultSecurityBaseline()`** — new opinionated alias of `withSecurityHeaders()` shipping a "safe-for-most-apps" baseline (`HSTS: max-age=31536000; includeSubDomains`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`). Deliberately omits `Cross-Origin-Embedder-Policy`, `Content-Security-Policy`, `Permissions-Policy` and HSTS `preload` — each is application-specific and would break legitimate setups by default. Caller-supplied `$overrides` array is merged on top of the baseline, so callers can tune any default or add additional headers without losing the rest.
+
+### Documentation
+
+- Two new bilingual wiki pages : `wiki/{fr,en}/observability.md` (`withResponseTime` + `ResponseTimeOption`, with options table, header families matrix, Slim middleware recipe and out-of-scope section) and `wiki/{fr,en}/content-negotiation.md` (`negotiateMimeType` with semantics matrix and Slim middleware recipe).
+- Wiki `wiki/{fr,en}/cors.md` extended with a `CORS predicates` section documenting `isCorsRequest` and `isCorsPreflight`.
+- Wiki `wiki/{fr,en}/security-headers.md` extended with a top-level `withDefaultSecurityBaseline()` section documenting the baseline values, the deliberate omissions, and the overrides mechanism.
+- TOC entries added to `wiki/{fr,en}/README.md` for the two new pages.
+
+### Dependencies
+
+- Picks up the new `HttpHeader::X_RESPONSE_TIME` and `HttpHeader::SERVER_TIMING` constants from `oihana/php-enums` (added in commit `91be75e` of that package).
+
 ## [0.4.0] - 2026-05-27
 
 Fourth release. One new helper family added on top of v0.3.0: extended Security headers — Cross-Origin policies (COOP / COEP / CORP) and Permissions-Policy. 1 new procedural helper (`buildPermissionsPolicyHeader`), 4 new typed enums (`CrossOriginOpenerPolicy`, `CrossOriginEmbedderPolicy`, `CrossOriginResourcePolicy`, `PermissionsPolicyFeature`), 4 new `SecurityHeadersOption` keys (`COOP`, `COEP`, `CORP`, `PERMISSIONS_POLICY`), 24 new tests (165 total / 336 assertions). Bilingual FR/EN wiki extended with two new sections under `withSecurityHeaders` and one new top-level section. No breaking change on the v0.3.0 surface.

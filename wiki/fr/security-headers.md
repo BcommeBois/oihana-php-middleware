@@ -145,6 +145,62 @@ PermissionsPolicyFeature::LOCAL_FONTS    => false ,
 
 N'autorise que ce dont ton application a vraiment besoin et refuse explicitement tout le reste.
 
+## `withDefaultSecurityBaseline()`
+
+```php
+namespace oihana\middleware\helpers\security ;
+
+function withDefaultSecurityBaseline( ResponseInterface $response , array $overrides = [] ) : ResponseInterface ;
+```
+
+Alias avec choix forts par défaut de `withSecurityHeaders()` qui livre une base « raisonnable pour la plupart des applis ». Pratique pour avoir une politique de sécurité correcte sans auditer chaque en-tête un par un.
+
+### Base émise
+
+| En-tête | Valeur par défaut |
+| :--- | :--- |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` (1 an, sous-domaines inclus, pas de preload) |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+
+### Volontairement HORS de la base
+
+| En-tête | Pourquoi il est exclu |
+| :--- | :--- |
+| `Cross-Origin-Embedder-Policy: require-corp` | Casserait toute sous-ressource tierce qui n'envoie pas son propre en-tête `CORP`. À activer explicitement après avoir audité tes sous-ressources. |
+| `Content-Security-Policy` | Demande un inventaire applicatif des sources de scripts / styles / images autorisées. |
+| `Permissions-Policy` | Dépend des fonctionnalités navigateur que ton application utilise vraiment. |
+| `Strict-Transport-Security; preload` | Nécessite une soumission à la [liste preload des navigateurs](https://hstspreload.org). |
+
+### Overrides
+
+Le tableau `$overrides` est fusionné par-dessus la base avant d'être transmis à `withSecurityHeaders()` — les clés fournies par l'appelant l'emportent. Sert à ajuster une valeur par défaut (HSTS plus court en staging, basculer sur `SAMEORIGIN`, etc.) ou à ajouter des en-têtes hors de la base (CSP, Permissions-Policy, COEP).
+
+```php
+use function oihana\middleware\helpers\security\withDefaultSecurityBaseline ;
+use oihana\middleware\enums\SecurityHeadersOption ;
+use oihana\middleware\enums\CrossOriginEmbedderPolicy ;
+
+// 1. Base telle quelle
+$response = withDefaultSecurityBaseline( $response ) ;
+
+// 2. Base + trio d'isolement entre origines + CSP
+$response = withDefaultSecurityBaseline( $response ,
+[
+    SecurityHeadersOption::COEP => CrossOriginEmbedderPolicy::REQUIRE_CORP ,
+    SecurityHeadersOption::CSP  => [ 'default-src' => "'self'" ] ,
+]) ;
+
+// 3. HSTS plus court en staging
+$response = withDefaultSecurityBaseline( $response ,
+[
+    SecurityHeadersOption::HSTS => 300 , // 5 minutes
+]) ;
+```
+
 ## `buildCspHeader()`
 
 ```php

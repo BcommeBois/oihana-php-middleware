@@ -145,6 +145,62 @@ PermissionsPolicyFeature::LOCAL_FONTS    => false ,
 
 Activate only what your app actually needs and explicitly deny everything else.
 
+## `withDefaultSecurityBaseline()`
+
+```php
+namespace oihana\middleware\helpers\security ;
+
+function withDefaultSecurityBaseline( ResponseInterface $response , array $overrides = [] ) : ResponseInterface ;
+```
+
+Opinionated alias of `withSecurityHeaders()` that ships a "safe-for-most-apps" baseline. Useful when you want a reasonable default without auditing every header.
+
+### Baseline emitted
+
+| Header | Baseline value |
+| :--- | :--- |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` (1 year, subdomains included, no preload) |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+
+### NOT in the baseline (deliberate)
+
+| Header | Why it's omitted |
+| :--- | :--- |
+| `Cross-Origin-Embedder-Policy: require-corp` | Would break every third-party subresource that does not ship its own `CORP` header. Enable explicitly after auditing your subresources. |
+| `Content-Security-Policy` | Requires per-app inventory of allowed script / style / image sources. |
+| `Permissions-Policy` | Depends on which browser features the app actually uses. |
+| `Strict-Transport-Security; preload` | Requires submission to the [browser preload list](https://hstspreload.org). |
+
+### Overrides
+
+The `$overrides` array is merged on top of the baseline before forwarding to `withSecurityHeaders()` — caller-supplied keys win. Use this to tune a default (loosen HSTS in staging, switch to `SAMEORIGIN`, etc.) or to add headers outside the baseline (CSP, Permissions-Policy, COEP).
+
+```php
+use function oihana\middleware\helpers\security\withDefaultSecurityBaseline ;
+use oihana\middleware\enums\SecurityHeadersOption ;
+use oihana\middleware\enums\CrossOriginEmbedderPolicy ;
+
+// 1. Baseline as-is
+$response = withDefaultSecurityBaseline( $response ) ;
+
+// 2. Baseline + cross-origin isolation triad + CSP
+$response = withDefaultSecurityBaseline( $response ,
+[
+    SecurityHeadersOption::COEP => CrossOriginEmbedderPolicy::REQUIRE_CORP ,
+    SecurityHeadersOption::CSP  => [ 'default-src' => "'self'" ] ,
+]) ;
+
+// 3. Loosen HSTS in staging
+$response = withDefaultSecurityBaseline( $response ,
+[
+    SecurityHeadersOption::HSTS => 300 , // 5 minutes
+]) ;
+```
+
 ## `buildCspHeader()`
 
 ```php

@@ -43,15 +43,20 @@
         } ,
         "files" : [
             "src/oihana/middleware/helpers/cors/applyCorsHeaders.php" ,
+            "src/oihana/middleware/helpers/cors/isCorsPreflight.php" ,
+            "src/oihana/middleware/helpers/cors/isCorsRequest.php" ,
             "src/oihana/middleware/helpers/csrf/generateCsrfToken.php" ,
             "src/oihana/middleware/helpers/csrf/verifyCsrfToken.php" ,
             "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
+            "src/oihana/middleware/helpers/negotiation/negotiateMimeType.php" ,
+            "src/oihana/middleware/helpers/observability/withResponseTime.php" ,
             "src/oihana/middleware/helpers/rateLimit/enforceRateLimit.php" ,
             "src/oihana/middleware/helpers/rateLimit/withRateLimitHeaders.php" ,
             "src/oihana/middleware/helpers/requestId/requestIdFromRequest.php" ,
             "src/oihana/middleware/helpers/requestId/withRequestIdHeader.php" ,
             "src/oihana/middleware/helpers/security/buildCspHeader.php" ,
             "src/oihana/middleware/helpers/security/buildPermissionsPolicyHeader.php" ,
+            "src/oihana/middleware/helpers/security/withDefaultSecurityBaseline.php" ,
             "src/oihana/middleware/helpers/security/withSecurityHeaders.php"
         ]
     } ,

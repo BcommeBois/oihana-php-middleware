@@ -119,6 +119,44 @@ class CorsMiddleware implements MiddlewareInterface
 }
 ```
 
+## Prédicats CORS
+
+Deux petits prédicats permettent à un middleware de décider si la branche CORS est pertinente pour une requête donnée, sans écrire les noms d'en-têtes à la main.
+
+```php
+namespace oihana\middleware\helpers\cors ;
+
+function isCorsRequest  ( ServerRequestInterface $request ) : bool ;
+function isCorsPreflight( ServerRequestInterface $request ) : bool ;
+```
+
+| Helper | Retourne `true` quand… |
+| :--- | :--- |
+| `isCorsRequest()` | La requête porte un en-tête `Origin`. |
+| `isCorsPreflight()` | La méthode de la requête est `OPTIONS` ET la requête porte un en-tête `Access-Control-Request-Method`. |
+
+Note : un `OPTIONS` seul (sans `Access-Control-Request-Method`) n'est **pas** un preflight — ça peut être une requête de découverte de route ou une sonde d'info serveur. `isCorsPreflight()` retourne `false` dans ce cas pour que le middleware passe la main au handler normal.
+
+```php
+use function oihana\middleware\helpers\cors\applyCorsHeaders ;
+use function oihana\middleware\helpers\cors\isCorsPreflight ;
+use function oihana\middleware\helpers\cors\isCorsRequest ;
+
+if ( isCorsPreflight( $request ) )
+{
+    return applyCorsHeaders( $request , $responseFactory->createResponse( 204 ) , $options ) ;
+}
+
+$response = $handler->handle( $request ) ;
+
+if ( isCorsRequest( $request ) )
+{
+    $response = applyCorsHeaders( $request , $response , $options ) ;
+}
+
+return $response ;
+```
+
 ## Pièges classiques évités par le helper
 
 - **`*` + credentials** : interdit par la spec, navigateurs rejettent. Le helper lève une exception au lieu de pousser une réponse invalide silencieusement.

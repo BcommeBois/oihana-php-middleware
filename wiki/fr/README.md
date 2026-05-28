@@ -58,6 +58,8 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Request ID](request-id.md)** — `requestIdFromRequest`, `withRequestIdHeader`, enum `RequestIdField`. Propagation `X-Request-Id` avec validation conservatrice de l'en-tête entrant.
 - **[Mode maintenance](maintenance.md)** — `respondMaintenanceMode`, enum `MaintenanceOption`. Réponse 503 propre avec `Retry-After` (int / DateTime / string) et body optionnel.
 - **[Limitation de débit](rate-limiting.md)** — `enforceRateLimit`, `withRateLimitHeaders`, interface `RateLimitStore`, `InMemoryRateLimitStore`, `RateLimitDecision`, enum `RateLimitOption`. Limite le nombre de requêtes autorisées par intervalle de temps, avec stockage au choix (en mémoire ou Memcached) et en-têtes `X-RateLimit-*` par défaut (ou nouveau format RFC 9421 en option).
+- **[Observabilité](observability.md)** — `withResponseTime`, enum `ResponseTimeOption`. Marque la réponse avec le temps de traitement écoulé, sous forme `X-Response-Time` (par défaut) ou `Server-Timing` W3C (en option).
+- **[Négociation de contenu](content-negotiation.md)** — `negotiateMimeType`. Wrapper PSR-7 léger autour de `negotiate()` de `oihana/php-http` pour choisir le meilleur type MIME depuis l'en-tête `Accept` du client.
 
 ## Code source
 
