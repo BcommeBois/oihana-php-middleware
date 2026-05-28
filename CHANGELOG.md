@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-28
+
+Sixth release. Final Tier 3 piece — W3C Trace Context propagation — plus a wiki-wide pedagogical pass. 3 new procedural helpers (`traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader` opt-in), 1 new pure function (`parseTraceparent`), 1 new value object (`TraceContext`), 2 new typed enums (`TracingField`, `ParsedTraceparentField`), 25 new tests (221 total / 423 assertions). All 8 pre-existing bilingual wiki pages aligned on the new pedagogical structure (concrete user-facing scenario before the API reference) inaugurated by the new `tracing.md` page. No breaking change on the v0.5.0 surface.
+
 ### Distributed tracing (W3C Trace Context)
 
 - **`traceContextFromRequest()`** — new procedural helper that resolves the W3C Trace Context for an incoming PSR-7 request. Reads `traceparent` and `tracestate`, validates per W3C §3.2.2.4 (strict 55-char hex shape, version `00`, all-zero sentinels rejected), generates a fresh span id via `random_bytes(8)`, returns the resolved `TraceContext`. **Silent regen on missing or malformed input** — matches the W3C "treat as if no traceparent received" guidance and prevents misconfigured upstream proxies from breaking tracing. Fresh contexts default to `sampled = true` so first-hop traces are never silently dropped.
@@ -154,7 +158,8 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.6.0
 [0.5.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.5.0
 [0.4.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.4.0
 [0.3.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.3.0
