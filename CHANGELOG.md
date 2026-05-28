@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Trusted hosts defense
+
+- **`enforceTrustedHosts()`** — new procedural helper that checks the incoming `Host` header against an allowlist. Sibling defense to `enforceMaxBodySize()`, targeting Host Header attacks (password-reset poisoning, cache poisoning, virtual-host routing bypass). Lives in the new `oihana\middleware\helpers\host\` namespace. Matching rules : exact match (case-insensitive per RFC 9110 §7.2), wildcard subdomain (`*.example.com` matches `api.example.com` and `staging.api.example.com` but NOT the apex), port stripped from incoming `Host:` before comparison (`example.com:8080` matches `example.com`). Nested or mid-string wildcards rejected as invalid. **Empty allowlist returns `true`** (intentional no-op : guard considered disabled, fails open rather than locking everyone out on a missing config). Missing or malformed `Host` returns `false` (defensive). Two internal helpers (`stripHostPort`, `matchTrustedHost`) exposed for testability.
+
+### Pagination headers
+
+- **`withPaginationHeaders()`** — new procedural helper that stamps RFC 5988 / RFC 8288 `Link` header (with the four standard `rel="first|prev|next|last"` entries) and the de-facto `X-Total-Count` header from a `PaginationLinks` value object. Implements the GitHub-style pagination pattern that keeps the response body pure data while exposing pagination state in headers — readable by generic HTTP clients (curl, Postman), CDNs that follow links, hypermedia SDKs. Link entries emitted in fixed order `first, prev, next, last`. Null URIs omitted ; `Link` header itself omitted when all four are null. `X-Total-Count` emitted when `totalCount` is non-null (including `0`, which is meaningful for empty result sets). The `X-Total-Count` name is the de-facto choice and not in any RFC ; callers wanting another name (`Total-Count`, `Total`) stamp it themselves via `withHeader()`. Lives in the new `oihana\middleware\helpers\pagination\` namespace.
+- **`PaginationLinks`** — readonly value object carrying the four standard URIs (`first`, `prev`, `next`, `last`) and an optional `totalCount`. All properties optional and nullable. Lives in the new `oihana\middleware\pagination\` namespace. Helper is **URI-agnostic** : the caller constructs the URIs (knows whether the API uses `?page=`, `?offset=`, `?cursor=`, etc.) ; the helper just stamps.
+
+### Documentation
+
+- New bilingual wiki page `wiki/{fr,en}/pagination.md` following the pedagogical pattern (concrete envelope-in-body vs headers-in-headers scenario, full PageLinkBuilder service recipe).
+- `wiki/{fr,en}/request-defense.md` extended with the `enforceTrustedHosts()` section (concrete password-reset poisoning attack scenario, matching rules table, behaviour matrix, defense stack positioning).
+- TOC entries in `wiki/{fr,en}/README.md` updated with the new `pagination.md` page and the now-complete `request-defense.md` description.
+
 ### Cache-Control
 
 - **`buildCacheControl()`** — new procedural helper that composes a `Cache-Control` header value from an associative array of directive names. Sibling of `buildCspHeader()` and `buildPermissionsPolicyHeader()`. Accepted value shapes : `true` (flag emitted bare), `false` (silently omitted — canonical "off" semantics, differs intentionally from `buildCspHeader()` which throws on `false` because Cache-Control directives have a meaningful "off" state), non-negative `int` (delta-seconds emitted as `directive=N`), negative `int` (silently omitted — prevents the nonsensical `max-age=-1` that some caches treat as "always stale"), `string` (verbatim, for the rare quoted-string form like `no-cache="Set-Cookie"`). Throws `InvalidArgumentException` on empty directive name or unsupported value type. Open vocabulary : raw directive names accepted, the enum isn't a closed list.

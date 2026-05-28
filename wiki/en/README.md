@@ -63,9 +63,10 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Distributed tracing](tracing.md)** — `traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader`, `parseTraceparent`, `TraceContext` value object, `TracingField` enum. W3C Trace Context propagation : trace id shared end-to-end across services so a single user request can be reconstructed in seconds from your log aggregator.
 - **[Problem Details](problem-details.md)** — `respondProblemDetails`, `Problem` value object, `ProblemField` enum. RFC 9457 standardised error responses (`application/problem+json`) with typed standard fields plus arbitrary extension keys.
 - **[Webhook signature verification](webhooks.md)** — `verifyWebhookSignature`, `WebhookSignatureOption` enum. Simple-HMAC pattern covering GitHub, Slack, Shopify, Twilio, SendGrid. Constant-time comparison, configurable algorithm / prefix / encoding.
-- **[Request defense](request-defense.md)** — `enforceMaxBodySize` (and `enforceTrustedHosts` later in v0.7). Pre-parsing guards that reject obviously-bad requests before the application has to handle them.
+- **[Request defense](request-defense.md)** — `enforceMaxBodySize`, `enforceTrustedHosts`. Pre-parsing guards that reject obviously-bad requests (oversized bodies, Host header attacks) before the application has to handle them.
 - **[Cache-Control](cache-control.md)** — `buildCacheControl`, `CacheDirective` enum. Compose `Cache-Control` header values from typed directive names. Catches the `max_age` vs `max-age` typo class that silently disables caching.
 - **[Conditional requests](conditional-requests.md)** — `isNotModified`, `respondNotModified` + internal `matchIfNoneMatch` / `stripWeakPrefix`. RFC 9110 `ETag` / `If-None-Match` / `If-Modified-Since` evaluation, paired with a canonical `304 Not Modified` response.
+- **[Pagination](pagination.md)** — `withPaginationHeaders`, `PaginationLinks` value object. RFC 5988 / RFC 8288 `Link` header + de-facto `X-Total-Count` for GitHub-style API pagination, body stays pure data.
 
 ## Source code
 

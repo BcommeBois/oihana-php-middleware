@@ -63,9 +63,10 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Traçage distribué](tracing.md)** — `traceContextFromRequest`, `withTracingAttribute`, `withTraceparentResponseHeader`, `parseTraceparent`, value object `TraceContext`, enum `TracingField`. Propagation W3C Trace Context : un identifiant de trace partagé bout-en-bout entre les services, pour reconstituer toute la chaîne d'événements d'une requête utilisateur en quelques secondes depuis ton agrégateur de logs.
 - **[Problem Details](problem-details.md)** — `respondProblemDetails`, value object `Problem`, enum `ProblemField`. Réponses d'erreur standardisées RFC 9457 (`application/problem+json`) avec champs standards typés plus clés d'extension arbitraires.
 - **[Vérification de signature de webhook](webhooks.md)** — `verifyWebhookSignature`, enum `WebhookSignatureOption`. Pattern simple-HMAC couvrant GitHub, Slack, Shopify, Twilio, SendGrid. Comparaison constant-time, algo / préfixe / encodage configurables.
-- **[Défense des requêtes entrantes](request-defense.md)** — `enforceMaxBodySize` (et `enforceTrustedHosts` plus tard dans la v0.7). Garde-fous pré-parsing qui rejettent les requêtes manifestement mauvaises avant que l'application ait à les gérer.
+- **[Défense des requêtes entrantes](request-defense.md)** — `enforceMaxBodySize`, `enforceTrustedHosts`. Garde-fous pré-parsing qui rejettent les requêtes manifestement mauvaises (bodies trop gros, attaques Host header) avant que l'application ait à les gérer.
 - **[Cache-Control](cache-control.md)** — `buildCacheControl`, enum `CacheDirective`. Compose la valeur de l'en-tête `Cache-Control` depuis des noms de directives typés. Attrape la classe de fautes `max_age` vs `max-age` qui désactive silencieusement le cache.
 - **[Requêtes conditionnelles](conditional-requests.md)** — `isNotModified`, `respondNotModified` + helpers internes `matchIfNoneMatch` / `stripWeakPrefix`. Évaluation RFC 9110 `ETag` / `If-None-Match` / `If-Modified-Since`, appariée à une réponse `304 Not Modified` canonique.
+- **[Pagination](pagination.md)** — `withPaginationHeaders`, value object `PaginationLinks`. En-tête `Link` RFC 5988 / RFC 8288 + `X-Total-Count` de-facto pour la pagination d'API style GitHub, body qui reste de la donnée pure.
 
 ## Code source
 

@@ -22,7 +22,7 @@ HTTP/1.1 413 Payload Too Large
 
 L'attaquant reçoit un rejet propre, ton worker reste en bonne santé. La défense côté PHP complète les garde-fous en amont (nginx `client_max_body_size`, PHP `post_max_size` / `upload_max_filesize`) — avoir les trois couches empêche qu'une seule mauvaise configuration soit porteuse à elle seule.
 
-Cette page couvre aussi une défense soeur, [`enforceTrustedHosts()`](#enforcetrustedhosts) (livrée plus tard dans la v0.7), contre les attaques Host Header.
+Cette page couvre aussi une défense soeur, [`enforceTrustedHosts()`](#enforcetrustedhosts), contre les attaques Host Header.
 
 ---
 
@@ -79,9 +79,74 @@ L'application de la limite de body côté PHP est **une couche dans un dispositi
 
 Un endpoint de login peut plafonner à 4 Ko ; un upload d'avatar à 5 Mo ; un upload vidéo à 200 Mo. Les garde-fous amont posent un plafond global ; le helper pose la réalité par route.
 
-## `enforceTrustedHosts()` — livré plus tard dans la v0.7
+## `enforceTrustedHosts()`
 
-Helper sœur contre les attaques Host Header (cache poisoning, password-reset poisoning). La documentation atterrira dans cette même page quand le helper sera livré (Lot C).
+```php
+namespace oihana\middleware\helpers\host ;
+
+function enforceTrustedHosts( ServerRequestInterface $request , array $trustedHosts ) : bool ;
+```
+
+Défense sœur contre les **attaques Host Header** — la classe d'attaques où un attaquant forge l'en-tête `Host:` pour faire générer à ton app des URLs pointant vers son domaine (emails de reset de mot de passe empoisonnés) ou pour contourner le routing virtual-host.
+
+### L'attaque concrète
+
+Ton app envoie des emails de reset de mot de passe contenant :
+
+```php
+$resetLink = $request->getUri()->getScheme()
+           . '://' . $request->getHeaderLine( 'Host' )
+           . '/reset/' . $token ;
+```
+
+Un attaquant demande un reset pour le compte de quelqu'un d'autre, mais avec `Host: attacker.com` dans sa requête. Ton app génère `https://attacker.com/reset/<vrai-token>` et l'envoie par mail à la victime. La victime clique. Le token fuit à l'attaquant. Compte compromis.
+
+Avec `enforceTrustedHosts()`, les requêtes portant un Host qui n'est pas sur ton allowlist sont rejetées avant que tout handler ne tourne :
+
+```php
+use function oihana\middleware\helpers\host\enforceTrustedHosts ;
+
+if ( !enforceTrustedHosts( $request , [
+    'example.com' ,
+    '*.example.com' ,
+    'admin.internal' ,
+] ) )
+{
+    return $responseFactory->createResponse( 400 ) ;
+}
+```
+
+### Règles de matching
+
+Per RFC 9110 §7.2 — `Host` est insensible à la casse.
+
+| Entrée de l'allowlist | Matche |
+| :--- | :--- |
+| `example.com` | Match exact : `Host: example.com` ou `Host: example.com:8080` (port strippé). |
+| `*.example.com` | N'importe quel sous-domaine : `api.example.com`, `staging.api.example.com`. **Ne matche PAS l'apex `example.com`** — le lister explicitement pour l'accepter. |
+| `*.*.example.com` | **Rejeté comme invalide** — les wildcards imbriqués n'ont pas de sémantique standard. |
+| `api.*.com` | **Rejeté comme invalide** — les wildcards en milieu de chaîne n'ont pas de sémantique standard. |
+
+### Matrice de comportement
+
+| Condition | Retourne |
+| :--- | :--- |
+| Allowlist vide | `true` (no-op : guard désactivé, PAS bloquer-tout) |
+| En-tête `Host` manquant | `false` (HTTP/1.1 exige Host) |
+| `Host` malformé (multiple colons non bracketés, bracket IPv6 non fermé) | `false` (défensif) |
+| Host matche une entrée de l'allowlist | `true` |
+| Host ne matche aucune entrée | `false` |
+
+Le comportement **allowlist vide = no-op** est un filet de sécurité intentionnel. Un déploiement mal configuré qui câble le middleware mais oublie de remplir l'allowlist verrouillerait sinon tous les utilisateurs dehors — le no-op échoue ouvert au lieu, ce qui est le bon compromis pour une config manquante (tu le remarqueras ; tu ne remarquerais pas forcément une défense qui marche mais qui est contournée).
+
+### Où ça s'insère dans la stack de défense
+
+| Couche | Configure | Rôle |
+| :--- | :--- | :--- |
+| **Blocs `server_name` nginx / Apache** | Routing par vhost | Rejet au bord, avant que la requête atteigne PHP-FPM. |
+| **`enforceTrustedHosts()`** | Allowlist côté app | Défense en profondeur au cas où le reverse-proxy serait mal configuré ou absent. |
+
+Si ton reverse-proxy fait déjà du matching `server_name` strict et ne forward jamais des hosts inconnus, le helper est redondant en production. Il garde son intérêt en développement (où on ne fait typiquement pas tourner un reverse-proxy) et comme fallback si la config proxy dérive.
 
 ## Voir aussi
 
