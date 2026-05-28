@@ -117,6 +117,34 @@ This helper covers **MIME-type negotiation only**. Power users wanting to negoti
 - **Set the response `Content-Type`** — that's the handler's job, after it knows what it actually rendered.
 - **Throw on unsupported types** — it returns `$default` (or `null`) so callers can decide how to handle "no acceptable type" (e.g. respond `406 Not Acceptable`).
 
+## Beyond MIME types — `Accept-Language`, `Accept-Encoding`, `Accept-Charset`
+
+Three sibling helpers cover the rest of the `Accept-*` family. Each is a one-line PSR-7 adapter to `oihana\http\helpers\negotiation\negotiate()` — same semantics as `negotiateMimeType()`, different header.
+
+```php
+namespace oihana\middleware\helpers\negotiation ;
+
+function negotiateLanguage( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+function negotiateEncoding( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+function negotiateCharset ( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+```
+
+| Helper | Reads header | Typical use |
+| :--- | :--- | :--- |
+| `negotiateLanguage()` | `Accept-Language` | i18n — pick the locale to render. |
+| `negotiateEncoding()` | `Accept-Encoding` | Pick `br` / `gzip` / `identity` for response compression. |
+| `negotiateCharset()` | `Accept-Charset` | Pick `utf-8` / `iso-8859-1`. **`Accept-Charset` is deprecated by RFC 9110 §12.5.2** — modern browsers no longer send it. Useful only for legacy or non-browser HTTP clients. |
+
+```php
+use function oihana\middleware\helpers\negotiation\negotiateLanguage ;
+
+// Client sends `Accept-Language: fr-CH,fr;q=0.8,en;q=0.5`
+$locale = negotiateLanguage( $request , [ 'en' , 'fr' , 'de' ] , 'en' ) ;
+// → 'fr' (matches the second entry — `fr-CH` is an exact-only candidate)
+```
+
+Note for `negotiateLanguage()` : matching is by exact tag, not by BCP 47 subtag inheritance. `fr-CA` and `fr` are distinct candidates ; for full subtag lookup (a client asking for `fr-CH` falling back to `fr`), layer a dedicated lib on top.
+
 ## See also
 
 - [Getting started](getting-started.md) — general PSR-15 middleware wiring.

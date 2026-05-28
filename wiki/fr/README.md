@@ -64,6 +64,8 @@ $response = applyCorsHeaders( $request , $response ,
 - **[Problem Details](problem-details.md)** — `respondProblemDetails`, value object `Problem`, enum `ProblemField`. Réponses d'erreur standardisées RFC 9457 (`application/problem+json`) avec champs standards typés plus clés d'extension arbitraires.
 - **[Vérification de signature de webhook](webhooks.md)** — `verifyWebhookSignature`, enum `WebhookSignatureOption`. Pattern simple-HMAC couvrant GitHub, Slack, Shopify, Twilio, SendGrid. Comparaison constant-time, algo / préfixe / encodage configurables.
 - **[Défense des requêtes entrantes](request-defense.md)** — `enforceMaxBodySize` (et `enforceTrustedHosts` plus tard dans la v0.7). Garde-fous pré-parsing qui rejettent les requêtes manifestement mauvaises avant que l'application ait à les gérer.
+- **[Cache-Control](cache-control.md)** — `buildCacheControl`, enum `CacheDirective`. Compose la valeur de l'en-tête `Cache-Control` depuis des noms de directives typés. Attrape la classe de fautes `max_age` vs `max-age` qui désactive silencieusement le cache.
+- **[Requêtes conditionnelles](conditional-requests.md)** — `isNotModified`, `respondNotModified` + helpers internes `matchIfNoneMatch` / `stripWeakPrefix`. Évaluation RFC 9110 `ETag` / `If-None-Match` / `If-Modified-Since`, appariée à une réponse `304 Not Modified` canonique.
 
 ## Code source
 

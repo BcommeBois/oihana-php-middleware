@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cache-Control
+
+- **`buildCacheControl()`** — new procedural helper that composes a `Cache-Control` header value from an associative array of directive names. Sibling of `buildCspHeader()` and `buildPermissionsPolicyHeader()`. Accepted value shapes : `true` (flag emitted bare), `false` (silently omitted — canonical "off" semantics, differs intentionally from `buildCspHeader()` which throws on `false` because Cache-Control directives have a meaningful "off" state), non-negative `int` (delta-seconds emitted as `directive=N`), negative `int` (silently omitted — prevents the nonsensical `max-age=-1` that some caches treat as "always stale"), `string` (verbatim, for the rare quoted-string form like `no-cache="Set-Cookie"`). Throws `InvalidArgumentException` on empty directive name or unsupported value type. Open vocabulary : raw directive names accepted, the enum isn't a closed list.
+- **`CacheDirective`** enum — 13 typed constants covering RFC 9111 (`MAX_AGE`, `S_MAXAGE`, `PUBLIC`, `PRIVATE`, `NO_CACHE`, `NO_STORE`, `MUST_REVALIDATE`, `PROXY_REVALIDATE`, `MUST_UNDERSTAND`, `NO_TRANSFORM`), RFC 5861 (`STALE_WHILE_REVALIDATE`, `STALE_IF_ERROR`) and RFC 8246 (`IMMUTABLE`).
+
+### Conditional requests
+
+- **`isNotModified()`** — new procedural helper that evaluates the request's HTTP preconditions against a known `ETag` (and optional `Last-Modified` reference). Implements RFC 9110 §13.1.3 precedence : `If-None-Match` takes precedence over `If-Modified-Since` when both are present. `If-None-Match` uses weak comparison per RFC 9110 §8.8.3.2 (`W/` prefix stripped on both sides) and supports the wildcard (`*`) and the comma-separated list forms. `If-Modified-Since` is parsed via `oihana\http\helpers\dates\parseHttpDate()` (all three RFC 9110 §5.6.7 HTTP-date formats). **Malformed date ⇒ `false`** (defensive — can't claim the client is up-to-date if the header is unparseable). Two internal helpers (`matchIfNoneMatch`, `stripWeakPrefix`) are exposed for testability and for callers that already have a parsed precondition header.
+- **`respondNotModified()`** — new procedural helper that turns a PSR-7 response into a canonical RFC 9110 §15.4.5 `304 Not Modified` response : status `304`, `ETag` header stamped, empty body. Other update-worthy headers (`Cache-Control`, `Vary`, `Date`) stay the caller's responsibility — stamp them via the standard `withHeader()` chain. PSR-7 immutable.
+
+### Content negotiation (extended)
+
+- **`negotiateLanguage()`** — new PSR-7 wrapper around `oihana\http\helpers\negotiation\negotiate()` targeting `Accept-Language`. Same semantics as `negotiateMimeType()`. Matches by exact tag (BCP 47 subtag inheritance is out of scope — `fr-CA` and `fr` are distinct candidates).
+- **`negotiateEncoding()`** — new PSR-7 wrapper targeting `Accept-Encoding`. Useful when the server can serve multiple compressed forms (`br`, `gzip`, `identity`) and needs to pick the one the client supports.
+- **`negotiateCharset()`** — new PSR-7 wrapper targeting `Accept-Charset`. Provided for completeness ; the header is deprecated by RFC 9110 §12.5.2 (modern browsers no longer send it), useful only for legacy or non-browser HTTP clients.
+
+### Documentation
+
+- Two new bilingual wiki pages following the pedagogical pattern : `wiki/{fr,en}/cache-control.md` (concrete `max_age` typo → silently disabled cache scenario, full directive reference matrix, common pitfalls section) and `wiki/{fr,en}/conditional-requests.md` (concrete blog home page bandwidth savings scenario, `If-None-Match` / `If-Modified-Since` precondition semantics, ETag middleware recipe). The `wiki/{fr,en}/content-negotiation.md` page extended with a "Beyond MIME types" section covering the three new `Accept-*` helpers. TOC entries added to `wiki/{fr,en}/README.md`.
+
 ### Problem Details (RFC 9457)
 
 - **`respondProblemDetails()`** — new procedural helper that turns a PSR-7 response into a standardised RFC 9457 (formerly RFC 7807) error response. Sets HTTP status from the `Problem` value object (defaults to `400` when `null`), emits `Content-Type: application/problem+json`, writes the JSON body via `Problem::toArray()` with `JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE` so URI references and non-ASCII titles stay readable. PSR-7 immutable.

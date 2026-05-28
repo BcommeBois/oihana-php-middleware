@@ -117,6 +117,34 @@ Ce helper couvre **uniquement la négociation des types MIME**. Pour négocier l
 - **La pose du `Content-Type` de la réponse** — c'est le travail du handler, une fois qu'il sait ce qu'il a vraiment rendu.
 - **Le throw sur type non supporté** — il retourne `$default` (ou `null`) pour que l'appelant décide quoi faire en cas de « pas de type acceptable » (ex. répondre `406 Not Acceptable`).
 
+## Au-delà des types MIME — `Accept-Language`, `Accept-Encoding`, `Accept-Charset`
+
+Trois helpers sœurs couvrent le reste de la famille `Accept-*`. Chacun est un adaptateur PSR-7 d'une ligne sur `oihana\http\helpers\negotiation\negotiate()` — même sémantique que `negotiateMimeType()`, en-tête différent.
+
+```php
+namespace oihana\middleware\helpers\negotiation ;
+
+function negotiateLanguage( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+function negotiateEncoding( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+function negotiateCharset ( ServerRequestInterface $request , array $supported , ?string $default = null ) : ?string ;
+```
+
+| Helper | Lit l'en-tête | Usage typique |
+| :--- | :--- | :--- |
+| `negotiateLanguage()` | `Accept-Language` | i18n — choisir la locale pour rendre la page. |
+| `negotiateEncoding()` | `Accept-Encoding` | Choisir `br` / `gzip` / `identity` pour la compression de la réponse. |
+| `negotiateCharset()` | `Accept-Charset` | Choisir `utf-8` / `iso-8859-1`. **`Accept-Charset` est déprécié par la RFC 9110 §12.5.2** — les navigateurs modernes ne l'envoient plus. Utile uniquement pour les clients HTTP legacy ou non-navigateurs. |
+
+```php
+use function oihana\middleware\helpers\negotiation\negotiateLanguage ;
+
+// Le client envoie `Accept-Language: fr-CH,fr;q=0.8,en;q=0.5`
+$locale = negotiateLanguage( $request , [ 'en' , 'fr' , 'de' ] , 'en' ) ;
+// → 'fr' (matche la deuxième entrée — `fr-CH` est un candidat exact-only)
+```
+
+Note pour `negotiateLanguage()` : le match se fait par tag exact, pas par héritage de sous-tag BCP 47. `fr-CA` et `fr` sont des candidats distincts ; pour un lookup de sous-tag complet (un client qui demande `fr-CH` retombant sur `fr`), branche une lib dédiée par-dessus.
+
 ## Voir aussi
 
 - [Démarrage](getting-started.md) — câblage middleware PSR-15 général.
