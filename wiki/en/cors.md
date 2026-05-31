@@ -139,6 +139,8 @@ class CorsMiddleware implements MiddlewareInterface
 }
 ```
 
+> ⚠️ In a Slim PHP project for example, register this middleware **after** `$app->addRoutingMiddleware()` (and before `ErrorMiddleware`). Otherwise Slim answers `405 Method Not Allowed` to `OPTIONS` preflights before the middleware can return `204`, and CORS breaks silently on routes that do not declare `OPTIONS`.
+
 ## CORS predicates
 
 Two small predicates help middlewares decide whether the CORS branch is even relevant for a given request, without spelling out the underlying header names.

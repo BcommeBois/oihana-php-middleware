@@ -139,6 +139,8 @@ class CorsMiddleware implements MiddlewareInterface
 }
 ```
 
+> ⚠️ Dans un projet Slim PHP par exemple, placez ce middleware **après** `$app->addRoutingMiddleware()` (et avant `ErrorMiddleware`). Sinon Slim répond `405 Method Not Allowed` aux preflights `OPTIONS` avant que le middleware ne puisse renvoyer `204`, et CORS casse silencieusement sur les routes qui ne déclarent pas `OPTIONS`.
+
 ## Prédicats CORS
 
 Deux petits prédicats permettent à un middleware de décider si la branche CORS est pertinente pour une requête donnée, sans écrire les noms d'en-têtes à la main.
