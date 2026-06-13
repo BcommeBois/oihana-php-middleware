@@ -128,6 +128,16 @@ class ConditionalRequestsTest extends TestCase
         $this->assertFalse( isNotModified( $request , '' , null ) ) ;
     }
 
+    public function testLastModifiedSetButNoIfModifiedSinceHeaderReturnsFalse() :void
+    {
+        // A reference date is known but the client sent no precondition
+        // header at all (no If-None-Match, no If-Modified-Since) — nothing to
+        // compare against, so the cache can't be validated.
+        $lastModified = new DateTimeImmutable( '2026-05-28 10:00:00' , new DateTimeZone( 'UTC' ) ) ;
+
+        $this->assertFalse( isNotModified( $this->newRequest() , '' , $lastModified ) ) ;
+    }
+
     // -------------------------------------------------------------------------
     // matchIfNoneMatch (internal helper, exposed for testability)
     // -------------------------------------------------------------------------

@@ -63,6 +63,13 @@ class EnforceTrustedHostsTest extends TestCase
         $this->assertFalse( enforceTrustedHosts( $this->newRequest( null ) , [ 'example.com' ] ) ) ;
     }
 
+    public function testMalformedHostHeaderReturnsFalse() :void
+    {
+        // A present-but-malformed Host (multiple unbracketed colons) strips to
+        // empty — can't be trusted, so deny.
+        $this->assertFalse( enforceTrustedHosts( $this->newRequest( 'a:b:c:1234' ) , [ 'example.com' ] ) ) ;
+    }
+
     public function testWildcardMatchesSubdomain() :void
     {
         $this->assertTrue( enforceTrustedHosts( $this->newRequest( 'api.example.com' )    , [ '*.example.com' ] ) ) ;

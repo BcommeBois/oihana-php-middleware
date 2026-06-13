@@ -109,6 +109,21 @@ class RespondMaintenanceModeTest extends TestCase
         $this->assertSame( 'application/json' , $response->getHeaderLine( 'Content-Type' ) ) ;
     }
 
+    public function testMessageWithEmptyContentTypeFallsBackToDefault() :void
+    {
+        // A message is present but the supplied Content-Type is blank — the
+        // helper falls back to the text/plain default rather than emitting an
+        // empty header.
+        $response = respondMaintenanceMode( $this->newResponse() ,
+        [
+            MaintenanceOption::MESSAGE      => 'Down for maintenance.' ,
+            MaintenanceOption::CONTENT_TYPE => '' ,
+        ]) ;
+
+        $this->assertSame( 'Down for maintenance.'     , (string) $response->getBody() ) ;
+        $this->assertSame( 'text/plain; charset=utf-8' , $response->getHeaderLine( 'Content-Type' ) ) ;
+    }
+
     public function testEmptyMessageIsIgnored() :void
     {
         $response = respondMaintenanceMode( $this->newResponse() ,
