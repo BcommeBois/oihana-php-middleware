@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-13
+
+Maintenance release. **No functional change** on the v0.7.0 public surface — this release hardens the project's quality tooling and brings line coverage to 100%.
+
+### Testing
+
+- Line coverage raised to **100% (534/534 lines)** by exercising the last three reachable defensive guards that lacked a test: `isNotModified()` with a known `Last-Modified` reference but no precondition header at all, `enforceTrustedHosts()` with a present-but-malformed `Host` that strips to empty, and `respondMaintenanceMode()` with a message and a blank `Content-Type` override falling back to the `text/plain` default. 320 tests / 562 assertions (was 317 / 558). No production code changed.
+
+### Tooling
+
+- **Coverage report generator** `tools/clover-to-markdown.php` plus the `composer coverage` and `composer coverage:md` scripts (PHPUnit Clover → readable Markdown summary with a local trend log under `build/coverage/`, gitignored).
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) — runs the PHPUnit suite on PHP 8.4 with `composer validate --strict` and a Composer dependency cache.
+- **`CONTRIBUTING.md`** — setup, the `test` / `coverage` / `coverage:md` commands, and the project's testing philosophy.
+
+### Documentation
+
+- `wiki/{fr,en}/getting-started.md` — the "two-minute tour" still advertised "3 procedural helpers in two thematic folders" with a security/cors-only tree ; replaced with the real folder map (all helper families plus the value objects and enums).
+- `wiki/{fr,en}/security-headers.md` — the family intro listed three helpers and omitted `withDefaultSecurityBaseline()` (already documented further down) ; bumped to four with the missing bullet.
+- `README.md` — "What you can do" was missing every helper family added since 0.5.0 ; added distributed tracing, Problem Details, webhook signatures, request defense, HTTP caching & conditional requests, pagination, and the three extra `Accept-*` negotiation helpers, plus the `composer coverage` / `coverage:md` commands.
+
 ## [0.7.0] - 2026-05-28
 
 Seventh release. Three thematic helper families on top of v0.6.0 : **API correctness essentials** (Problem Details RFC 9457, request body size limit, generic webhook signature verification), **HTTP caching & content negotiation** (Cache-Control builder, conditional GET with `ETag` / `If-None-Match` / `If-Modified-Since`, three new `Accept-*` negotiation helpers), **defense & API ergonomics** (Host header allowlist, pagination headers RFC 5988 / RFC 8288). 11 new procedural helpers, 2 new value objects (`Problem`, `PaginationLinks`), 3 new typed enums (`ProblemField`, `WebhookSignatureOption`, `CacheDirective`), 96 new tests (317 total / 558 assertions). 6 new bilingual FR/EN wiki pages following the pedagogical pattern (concrete user-facing scenario before the API reference), 2 existing pages extended. No breaking change on the v0.6.0 surface.
@@ -216,7 +236,8 @@ First public release. Composable PHP middleware helpers for HTTP security: 3 pro
 - Initial scaffold: Composer manifest (PHP 8.4+, `psr/http-message` 2.x, `oihana/php-enums` `dev-main`, `oihana/php-http` `dev-main`), PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license.
 - 62 PHPUnit tests, 137 assertions covering the helpers and enums.
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-middleware/compare/0.7.1...HEAD
+[0.7.1]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.7.1
 [0.7.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.7.0
 [0.6.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.6.0
 [0.5.0]: https://github.com/BcommeBois/oihana-php-middleware/releases/tag/0.5.0
