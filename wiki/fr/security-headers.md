@@ -12,13 +12,14 @@ Chacun de ces en-têtes est un interrupteur côté serveur d'une seule ligne qui
 
 ---
 
-`oihana/php-middleware` fournit trois helpers procéduraux pour appliquer les en-têtes de sécurité HTTP les plus courants sur une réponse PSR-7 :
+`oihana/php-middleware` fournit quatre helpers procéduraux pour appliquer les en-têtes de sécurité HTTP les plus courants sur une réponse PSR-7 :
 
 - [`withSecurityHeaders()`](#withsecurityheaders) — le point d'entrée unique qui applique HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy, les trois en-têtes Cross-Origin (COOP / COEP / CORP) et Permissions-Policy en un seul appel.
+- [`withDefaultSecurityBaseline()`](#withdefaultsecuritybaseline) — wrapper « clé en main » au-dessus de `withSecurityHeaders()` qui pré-remplit une base « sûre pour la plupart des applications », les overrides de l'appelant étant fusionnés par-dessus.
 - [`buildCspHeader()`](#buildcspheader) — sous-helper pour composer la valeur d'un en-tête `Content-Security-Policy` depuis un tableau de directives.
 - [`buildPermissionsPolicyHeader()`](#buildpermissionspolicyheader) — sous-helper pour composer la valeur d'un en-tête `Permissions-Policy` depuis un tableau de fonctionnalités.
 
-Tous trois sont compatibles PSR-7 immutable : ils retournent une **nouvelle** `ResponseInterface`, l'instance fournie n'est jamais mutée.
+Tous quatre sont compatibles PSR-7 immutable : ils retournent une **nouvelle** `ResponseInterface`, l'instance fournie n'est jamais mutée.
 
 ## `withSecurityHeaders()`
 

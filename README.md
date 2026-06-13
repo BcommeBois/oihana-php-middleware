@@ -4,7 +4,7 @@
 
 Composable PHP HTTP middleware helpers. 
 
-Part of the **Oihana PHP** ecosystem, this package ships procedural helpers for HTTP security headers, CORS, CSRF, request-id propagation, maintenance mode, fixed-window rate limiting, observability and content negotiation — PSR-7 compatible, zero magic strings.
+Part of the **Oihana PHP** ecosystem, this package ships procedural helpers for HTTP security headers, CORS, CSRF, request-id propagation, maintenance mode, fixed-window rate limiting, observability, content negotiation, distributed tracing (W3C Trace Context), RFC 9457 Problem Details, webhook signature verification, request-defense guards, HTTP caching & conditional requests, and pagination headers — PSR-7 compatible, zero magic strings.
 
 [![Latest Version](https://img.shields.io/packagist/v/oihana/php-middleware.svg?style=flat-square)](https://packagist.org/packages/oihana/php-middleware)
 [![Total Downloads](https://img.shields.io/packagist/dt/oihana/php-middleware.svg?style=flat-square)](https://packagist.org/packages/oihana/php-middleware)
@@ -65,6 +65,32 @@ composer require oihana/php-middleware
 ### Content negotiation
 
 - **`negotiateMimeType()`** — thin PSR-7 wrapper over `oihana\http\helpers\negotiation\negotiate()` to select the best server-side MIME type from the client `Accept` header. Honours RFC 7231 quality values, standard wildcards (universal and `type/*`) and `q=0` explicit refusals.
+- **`negotiateCharset()`** / **`negotiateEncoding()`** / **`negotiateLanguage()`** — sibling wrappers selecting the best charset, content-encoding or language from the matching `Accept-Charset` / `Accept-Encoding` / `Accept-Language` request header, with the same quality-value semantics.
+
+### Distributed tracing
+
+- **`traceContextFromRequest()`** / **`withTracingAttribute()`** / **`withTraceparentResponseHeader()`** / **`parseTraceparent()`** — W3C Trace Context propagation. Extract or generate a `traceparent`, expose the `TraceContext` value object as a request attribute, and echo the canonical `traceparent` back on the response so a single user request can be reconstructed end-to-end across services from your log aggregator. `TracingField` enum carries the wiring names.
+
+### Problem Details
+
+- **`respondProblemDetails()`** — RFC 9457 standardised error responses (`application/problem+json`) built from a `Problem` value object: typed standard fields (`type`, `title`, `status`, `detail`, `instance`) plus arbitrary extension members. `ProblemField` enum carries the field names.
+
+### Webhook signature verification
+
+- **`verifyWebhookSignature()`** — verifies the simple-HMAC signature pattern shared by GitHub, Slack, Shopify, Twilio and SendGrid. Constant-time comparison, configurable algorithm / header prefix / encoding via the `WebhookSignatureOption` enum.
+
+### Request defense
+
+- **`enforceMaxBodySize()`** / **`enforceTrustedHosts()`** — pre-parsing guards that reject obviously-bad requests before the application has to handle them: oversized request bodies (declared `Content-Length` or streamed) and Host-header attacks (allowlist with wildcard-subdomain support, port stripping, fail-open on an empty allowlist).
+
+### HTTP caching & conditional requests
+
+- **`buildCacheControl()`** — compose a `Cache-Control` value from typed `CacheDirective` names (RFC 9111 / 5861 / 8246), catching the `max_age` vs `max-age` typo class that silently disables caching.
+- **`isNotModified()`** / **`respondNotModified()`** — evaluate RFC 9110 conditional requests (`ETag` / `If-None-Match` weak comparison, `If-Modified-Since`) and emit a canonical `304 Not Modified` response.
+
+### Pagination
+
+- **`withPaginationHeaders()`** — stamps the RFC 5988 / RFC 8288 `Link` header (`rel="first|prev|next|last"`) and the de-facto `X-Total-Count` header from a `PaginationLinks` value object, keeping the response body pure data (GitHub-style API pagination).
 
 ### Under the hood
 
@@ -78,6 +104,15 @@ Run all tests:
 ```bash
 composer test
 ```
+
+Measure coverage (requires Xdebug or PCOV):
+
+```bash
+composer coverage      # text + Clover + HTML under build/coverage/
+composer coverage:md   # readable Markdown summary (build/coverage/COVERAGE.md)
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full testing & coverage workflow.
 
 ## 🛠️ Generate the documentation
 

@@ -10,25 +10,34 @@ Requires PHP 8.4+. The package depends on `psr/http-message` (2.x) at runtime �
 
 ## Two-minute tour
 
-The package ships **3 procedural helpers** organised in two thematic folders under `oihana\middleware\helpers\`:
+The package ships a family of **procedural helpers** organised in thematic folders under `oihana\middleware\helpers\`, plus a handful of value objects and typed enums:
 
 ```
 src/oihana/middleware/
 ├── helpers/
-│   ├── security/
-│   │   ├── buildCspHeader.php
-│   │   └── withSecurityHeaders.php
-│   └── cors/
-│       └── applyCorsHeaders.php
-└── enums/
-    ├── ReferrerPolicy.php
-    ├── FrameOptions.php
-    ├── CspDirective.php
-    ├── SecurityHeadersOption.php
-    └── CorsOption.php
+│   ├── body/          — enforceMaxBodySize
+│   ├── cache/         — buildCacheControl, isNotModified, respondNotModified
+│   ├── cors/          — applyCorsHeaders, isCorsRequest, isCorsPreflight
+│   ├── csrf/          — generateCsrfToken, verifyCsrfToken
+│   ├── host/          — enforceTrustedHosts
+│   ├── maintenance/   — respondMaintenanceMode
+│   ├── negotiation/   — negotiateMimeType, negotiateCharset, negotiateEncoding, negotiateLanguage
+│   ├── observability/ — withResponseTime
+│   ├── pagination/    — withPaginationHeaders
+│   ├── problem/       — respondProblemDetails
+│   ├── rateLimit/     — enforceRateLimit, withRateLimitHeaders
+│   ├── requestId/     — requestIdFromRequest, withRequestIdHeader
+│   ├── security/      — withSecurityHeaders, withDefaultSecurityBaseline, buildCspHeader, buildPermissionsPolicyHeader
+│   ├── tracing/       — traceContextFromRequest, withTracingAttribute, withTraceparentResponseHeader
+│   └── webhook/       — verifyWebhookSignature
+├── pagination/        — PaginationLinks (value object)
+├── problem/           — Problem (value object)
+├── rateLimit/         — InMemoryRateLimitStore, RateLimitDecision, RateLimitStore
+├── tracing/           — TraceContext, parseTraceparent
+└── enums/             — typed option keys & constant sets (CacheDirective, CorsOption, CspDirective, …)
 ```
 
-Each helper takes a PSR-7 `ResponseInterface` and returns a new instance — no mutation, true to the PSR-7 contract.
+See the [table of contents](README.md) for a guided tour of each family. Most helpers take a PSR-7 message (request or response) and return a new instance — no mutation, true to the PSR-7 contract.
 
 ```php
 use Psr\Http\Message\ResponseInterface ;

@@ -12,13 +12,14 @@ Each of these headers is a one-line server-side switch that blocks an entire cla
 
 ---
 
-`oihana/php-middleware` ships three procedural helpers to apply the most common HTTP security response headers to a PSR-7 response:
+`oihana/php-middleware` ships four procedural helpers to apply the most common HTTP security response headers to a PSR-7 response:
 
 - [`withSecurityHeaders()`](#withsecurityheaders) — the single entry point that applies HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy, the three Cross-Origin policies (COOP / COEP / CORP) and Permissions-Policy in one call.
+- [`withDefaultSecurityBaseline()`](#withdefaultsecuritybaseline) — opinionated wrapper over `withSecurityHeaders()` that pre-fills a "safe-for-most-apps" baseline, with caller overrides merged on top.
 - [`buildCspHeader()`](#buildcspheader) — sub-helper that composes a `Content-Security-Policy` header value from a directive array.
 - [`buildPermissionsPolicyHeader()`](#buildpermissionspolicyheader) — sub-helper that composes a `Permissions-Policy` header value from a feature array.
 
-All three are PSR-7 immutable: they return a **new** `ResponseInterface` — the supplied instance is never mutated.
+All four are PSR-7 immutable: they return a **new** `ResponseInterface` — the supplied instance is never mutated.
 
 ## `withSecurityHeaders()`
 
