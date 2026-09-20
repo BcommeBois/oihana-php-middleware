@@ -66,6 +66,7 @@ composer require oihana/php-middleware
 
 - **`negotiateMimeType()`** — thin PSR-7 wrapper over `oihana\http\helpers\negotiation\negotiate()` to select the best server-side MIME type from the client `Accept` header. Honours RFC 7231 quality values, standard wildcards (universal and `type/*`) and `q=0` explicit refusals.
 - **`negotiateCharset()`** / **`negotiateEncoding()`** / **`negotiateLanguage()`** — sibling wrappers selecting the best charset, content-encoding or language from the matching `Accept-Charset` / `Accept-Encoding` / `Accept-Language` request header, with the same quality-value semantics.
+- **`negotiateFormat()`** — walks the last step a handler actually needs: maps the negotiated media type to a short token (`json` / `csv` / `xml`), with an optional `?format=` query override that is validated against the map, so an unknown token never reaches a serializer. `$queryKey = null` drops the override.
 
 ### Distributed tracing
 

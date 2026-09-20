@@ -60,6 +60,7 @@
             "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateCharset.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateEncoding.php" ,
+            "src/oihana/middleware/helpers/negotiation/negotiateFormat.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateLanguage.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateMimeType.php" ,
             "src/oihana/middleware/helpers/observability/withResponseTime.php" ,

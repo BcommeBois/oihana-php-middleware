@@ -109,11 +109,64 @@ class ContentNegotiationMiddleware implements MiddlewareInterface
 
 Downstream handlers read the chosen MIME type from the PSR-7 attribute and pick the right serializer / template engine accordingly.
 
+## From media type to short token — `negotiateFormat()`
+
+A handler rarely branches on a full media type : it picks a serializer from a short token (`json`, `csv`, `xml`). `negotiateFormat()` walks that last step, and adds the shortcut most APIs end up exposing anyway.
+
+```php
+namespace oihana\middleware\helpers\negotiation ;
+
+function negotiateFormat
+(
+    ServerRequestInterface $request      ,
+    array                  $formatByMime ,
+    ?string                $queryKey     = Param::FORMAT ,
+    ?string                $default      = null ,
+) : ?string ;
+```
+
+Three rules, in order :
+
+1. the `Accept` header is negotiated by `negotiateMimeType()` against the keys of `$formatByMime`, then the winning media type is mapped to its token ;
+2. `?format=` wins over the negotiated token, **only when its value is one of the tokens of the map** — an unknown value is ignored, since no serializer sits behind a token that never came from the server ;
+3. `$default` answers when nothing matched.
+
+`$queryKey = null` drops the override entirely, for an application that does not want it.
+
+```php
+use oihana\enums\Param ;
+
+use function oihana\middleware\helpers\negotiation\negotiateFormat ;
+
+$formats =
+[
+    'application/json' => 'json' ,
+    'text/csv'         => 'csv'  ,
+    'application/xml'  => 'xml'  ,
+] ;
+
+$format = negotiateFormat( $request , $formats ) ;
+```
+
+| `Accept` header | `?format=` | Returns |
+| :--- | :--- | :--- |
+| `application/json` | — | `'json'` |
+| `application/json;q=0.9, text/csv` | — | `'csv'` (q=1.0 beats q=0.9) |
+| universal wildcard | — | `'json'` (first entry of the map — server preference) |
+| `text/html` | — | `$default` (or `null`) |
+| absent | — | `$default` (or `null`) |
+| `application/json` | `xml` | `'xml'` (the explicit override wins) |
+| absent | `csv` | `'csv'` |
+| `application/json` | `yaml` | `'json'` (unknown token ignored) |
+| `application/json` | `xml`, with `$queryKey = null` | `'json'` (override disabled) |
+
+The map is ordered : its first entry is the server preference, the one that breaks quality-value ties and answers a bare wildcard. Several media types may share one token — `text/xml` and `application/xml` both mapping to `xml` is a legitimate map.
+
 ## Out of scope
 
 This helper covers **MIME-type negotiation only**. Power users wanting to negotiate other `Accept*` headers (`Accept-Language`, `Accept-Encoding`, `Accept-Charset`) should call [`oihana\http\helpers\negotiation\negotiate()`](https://github.com/BcommeBois/oihana-php-http) directly — `negotiateMimeType()` is just a one-line PSR-7 adapter for the `Accept` header. It also does NOT:
 
-- **Parse `?format=` query string fallbacks** — that's an application concern (some apps want it, some don't).
+- **Parse `?format=` query string fallbacks** — that is [`negotiateFormat()`](#from-media-type-to-short-token--negotiateformat)'s job, and it stays optional : `negotiateMimeType()` never reads the query string.
 - **Set the response `Content-Type`** — that's the handler's job, after it knows what it actually rendered.
 - **Throw on unsupported types** — it returns `$default` (or `null`) so callers can decide how to handle "no acceptable type" (e.g. respond `406 Not Acceptable`).
 

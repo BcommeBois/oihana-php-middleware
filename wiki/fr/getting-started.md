@@ -21,7 +21,7 @@ src/oihana/middleware/
 │   ├── csrf/          — generateCsrfToken, verifyCsrfToken
 │   ├── host/          — enforceTrustedHosts
 │   ├── maintenance/   — respondMaintenanceMode
-│   ├── negotiation/   — negotiateMimeType, negotiateCharset, negotiateEncoding, negotiateLanguage
+│   ├── negotiation/   — negotiateMimeType, negotiateFormat, negotiateCharset, negotiateEncoding, negotiateLanguage
 │   ├── observability/ — withResponseTime
 │   ├── pagination/    — withPaginationHeaders
 │   ├── problem/       — respondProblemDetails

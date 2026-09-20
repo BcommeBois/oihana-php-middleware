@@ -109,11 +109,64 @@ class ContentNegotiationMiddleware implements MiddlewareInterface
 
 Les handlers en aval lisent le MIME choisi depuis l'attribut PSR-7 et sélectionnent le bon serializer / moteur de template en conséquence.
 
+## Du type MIME au jeton court — `negotiateFormat()`
+
+Un handler branche rarement sur un type de média complet : il choisit un serializer à partir d'un jeton court (`json`, `csv`, `xml`). `negotiateFormat()` franchit cette dernière marche, et ajoute le raccourci que la plupart des API finissent par exposer de toute façon.
+
+```php
+namespace oihana\middleware\helpers\negotiation ;
+
+function negotiateFormat
+(
+    ServerRequestInterface $request      ,
+    array                  $formatByMime ,
+    ?string                $queryKey     = Param::FORMAT ,
+    ?string                $default      = null ,
+) : ?string ;
+```
+
+Trois règles, dans cet ordre :
+
+1. l'en-tête `Accept` est négocié par `negotiateMimeType()` sur les clés de `$formatByMime`, puis le type gagnant est ramené à son jeton ;
+2. `?format=` l'emporte sur le jeton négocié, **à la seule condition que sa valeur soit un des jetons de la table** — une valeur inconnue est ignorée, car aucun serializer ne se cache derrière un jeton qui ne vient pas du serveur ;
+3. `$default` répond quand rien n'a matché.
+
+`$queryKey = null` éteint complètement la dérogation, pour une application qui n'en veut pas.
+
+```php
+use oihana\enums\Param ;
+
+use function oihana\middleware\helpers\negotiation\negotiateFormat ;
+
+$formats =
+[
+    'application/json' => 'json' ,
+    'text/csv'         => 'csv'  ,
+    'application/xml'  => 'xml'  ,
+] ;
+
+$format = negotiateFormat( $request , $formats ) ;
+```
+
+| En-tête `Accept` | `?format=` | Retourne |
+| :--- | :--- | :--- |
+| `application/json` | — | `'json'` |
+| `application/json;q=0.9, text/csv` | — | `'csv'` (q=1.0 l'emporte sur q=0.9) |
+| wildcard universel | — | `'json'` (première entrée de la table — préférence serveur) |
+| `text/html` | — | `$default` (ou `null`) |
+| absent | — | `$default` (ou `null`) |
+| `application/json` | `xml` | `'xml'` (la dérogation explicite l'emporte) |
+| absent | `csv` | `'csv'` |
+| `application/json` | `yaml` | `'json'` (jeton inconnu ignoré) |
+| `application/json` | `xml`, avec `$queryKey = null` | `'json'` (dérogation éteinte) |
+
+La table est ordonnée : sa première entrée est la préférence du serveur, celle qui tranche les égalités de quality value et répond au wildcard universel. Plusieurs types de média peuvent partager un jeton — `text/xml` et `application/xml` vers `xml` est une table légitime.
+
 ## Hors scope
 
 Ce helper couvre **uniquement la négociation des types MIME**. Pour négocier les autres en-têtes `Accept*` (`Accept-Language`, `Accept-Encoding`, `Accept-Charset`), appelle [`oihana\http\helpers\negotiation\negotiate()`](https://github.com/BcommeBois/oihana-php-http) directement — `negotiateMimeType()` n'est qu'un adaptateur PSR-7 d'une ligne pour l'en-tête `Accept`. Il ne fait pas non plus :
 
-- **Le fallback sur `?format=` dans la query string** — c'est une préoccupation applicative (certaines apps le veulent, d'autres non).
+- **Le fallback sur `?format=` dans la query string** — c'est l'affaire de [`negotiateFormat()`](#du-type-mime-au-jeton-court--negotiateformat), qui reste facultatif : `negotiateMimeType()` ne lit jamais la query string.
 - **La pose du `Content-Type` de la réponse** — c'est le travail du handler, une fois qu'il sait ce qu'il a vraiment rendu.
 - **Le throw sur type non supporté** — il retourne `$default` (ou `null`) pour que l'appelant décide quoi faire en cas de « pas de type acceptable » (ex. répondre `406 Not Acceptable`).
 

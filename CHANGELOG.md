@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`negotiateFormat()`** (`helpers/negotiation/`) — walks the last step a handler actually needs after
+  content negotiation: it maps the negotiated media type to a short format token (`json` / `csv` /
+  `xml`) and lets a `?format=` query parameter override it. The override is **validated against the
+  map** — an unknown token is ignored rather than propagated, since no serializer sits behind a token
+  that never came from the server. The map is ordered (its first entry is the server preference, which
+  breaks quality ties and answers a bare wildcard), several media types may share one token, and
+  `$queryKey = null` drops the override entirely. The query key defaults to `Param::FORMAT`.
+  13 tests / 15 assertions, all lines covered (suite: 333 tests / 577 assertions).
+
+### Changed
+
+- **`wiki/{fr,en}/content-negotiation.md` § *Out of scope* no longer lists the `?format=` fallback as a
+  deliberate omission of the package** — it is `negotiateFormat()`'s job now. The statement still holds
+  for `negotiateMimeType()` itself, which never reads the query string.
+
 ### Testing
 
 - **PHPUnit 13.** The `phpunit/phpunit` constraint moves from `^12` to `^13` and `phpunit.xml` adopts
