@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Testing
+
+- **PHPUnit 13.** The `phpunit/phpunit` constraint moves from `^12` to `^13` and `phpunit.xml` adopts
+  the 13.3 schema: `cacheResult` (deprecated, dropped in 14) becomes `recordTestRunHistory="false"`,
+  and `executionOrder` drops `defects`, which cannot sort without a recorded history and was inert
+  anyway. Aligns with `oihana/php-core`. No test code changed: 320 tests / 562 assertions stay green
+  under 13.3.4, line coverage stays at 100%.
+
 ## [0.7.1] - 2026-06-13
 
 Maintenance release. **No functional change** on the v0.7.0 public surface — this release hardens the project's quality tooling and brings line coverage to 100%.
