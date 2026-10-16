@@ -1,7 +1,7 @@
 {
     "name" : "oihana/php-middleware" ,
     "type" : "library" ,
-    "description" : "Composable PHP middleware helpers — security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy, X-Content-Type-Options), CORS with preflight, CSRF, request-id, maintenance mode, rate limiting. PSR-7 compatible, zero magic strings." ,
+    "description" : "Composable PHP middleware helpers — security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy, X-Content-Type-Options), CORS with preflight, CSRF, request-id, maintenance mode, rate limiting, idempotency keys. PSR-7 compatible, zero magic strings." ,
     "keywords" : [
         "php" ,
         "http" ,
@@ -16,7 +16,8 @@
         "request-id" ,
         "maintenance" ,
         "rate-limit" ,
-        "rate-limiting"
+        "rate-limiting" ,
+        "idempotency"
     ] ,
     "homepage" : "https://github.com/BcommeBois/oihana-php-middleware" ,
     "license" : "MPL-2.0" ,
@@ -57,6 +58,11 @@
             "src/oihana/middleware/helpers/csrf/generateCsrfToken.php" ,
             "src/oihana/middleware/helpers/csrf/verifyCsrfToken.php" ,
             "src/oihana/middleware/helpers/host/enforceTrustedHosts.php" ,
+            "src/oihana/middleware/helpers/idempotency/beginIdempotency.php" ,
+            "src/oihana/middleware/helpers/idempotency/completeIdempotency.php" ,
+            "src/oihana/middleware/helpers/idempotency/idempotencyFingerprint.php" ,
+            "src/oihana/middleware/helpers/idempotency/isIdempotencyRecordable.php" ,
+            "src/oihana/middleware/helpers/idempotency/respondIdempotentReplay.php" ,
             "src/oihana/middleware/helpers/maintenance/respondMaintenanceMode.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateCharset.php" ,
             "src/oihana/middleware/helpers/negotiation/negotiateEncoding.php" ,

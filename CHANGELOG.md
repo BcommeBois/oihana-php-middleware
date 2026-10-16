@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **2026-10-16** — **Idempotency keys** — feat(idempotency): a request replayed with the same
+  `Idempotency-Key` gets the first answer again instead of running the action twice — the case of a
+  client that never received the answer (a connection dropped after the server stored the record) and
+  retries. Same shape as the rate limiter: the helpers decide, the application builds its responses.
+  - `beginIdempotency()` (`helpers/idempotency/`) returns an `IdempotencyDecision` whose outcome is one
+    of the 7 `IdempotencyOutcome` constants : `skip` (safe method, or no key where it is optional),
+    `missing` (no key where it is `required`), `invalid` (an empty key, or one longer than
+    `maxKeyLength` — refused rather than ignored), `proceed` (the key is now claimed for a `lease`),
+    `mismatch` (the key is held for another body), `replay` (same body, response kept) and
+    `inProgress` (same body, first request still running, with a `retryAfter`). The store key is
+    `{keyPrefix}:{sha256(scope, METHOD, path, key)}` : two accounts never share a key.
+  - `completeIdempotency()` keeps the status, the chosen headers and the body for `ttl` seconds
+    (7 days by default) when `isIdempotencyRecordable()` accepts the status — `2xx`, `3xx` and the `4xx`
+    that depend on the request only — and releases the key otherwise (`5xx`, `401`, `403`, `408`,
+    `425`, `429`), so a replay may succeed. A non-seekable body is never kept.
+  - `respondIdempotentReplay()` serves a kept response again with `Idempotent-Replayed: true`.
+  - `idempotencyFingerprint()` hashes the parsed body with its object keys sorted recursively (the raw
+    body otherwise) and each uploaded file (field path, name, type, SHA-256 of its content read by
+    chunks, no byte kept) — stable across multipart boundaries, which change on every attempt.
+  - `IdempotencyStore` contract (`begin` atomic with a lease that a replay takes over once lapsed,
+    `complete`, `find`, `release`), `InMemoryIdempotencyStore` for tests and CLI tools, the
+    `IdempotencyRecord` value object serialised with the `IdempotencyField` keys, and the
+    `IdempotencyOption` keys, read on every call so they may be chosen per route or per client.
+  - Uses `HttpHeader::IDEMPOTENT_REPLAYED` from `oihana/php-enums`. Wiki page
+    `wiki/{fr,en}/idempotency.md` (flow, options, a PSR-15 recipe, what a production store must
+    guarantee, why `429` rather than the IETF draft's `409` for a key in progress), README and wiki
+    indexes. 76 new tests ; suite 409 tests / 741 assertions, line coverage 100 % (740/740).
+
 - **`negotiateFormat()`** (`helpers/negotiation/`) — walks the last step a handler actually needs after
   content negotiation: it maps the negotiated media type to a short format token (`json` / `csv` /
   `xml`) and lets a `?format=` query parameter override it. The override is **validated against the

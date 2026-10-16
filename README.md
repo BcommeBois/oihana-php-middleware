@@ -4,7 +4,7 @@
 
 Composable PHP HTTP middleware helpers. 
 
-Part of the **Oihana PHP** ecosystem, this package ships procedural helpers for HTTP security headers, CORS, CSRF, request-id propagation, maintenance mode, fixed-window rate limiting, observability, content negotiation, distributed tracing (W3C Trace Context), RFC 9457 Problem Details, webhook signature verification, request-defense guards, HTTP caching & conditional requests, and pagination headers — PSR-7 compatible, zero magic strings.
+Part of the **Oihana PHP** ecosystem, this package ships procedural helpers for HTTP security headers, CORS, CSRF, request-id propagation, maintenance mode, fixed-window rate limiting, idempotency keys, observability, content negotiation, distributed tracing (W3C Trace Context), RFC 9457 Problem Details, webhook signature verification, request-defense guards, HTTP caching & conditional requests, and pagination headers — PSR-7 compatible, zero magic strings.
 
 [![Latest Version](https://img.shields.io/packagist/v/oihana/php-middleware.svg?style=flat-square)](https://packagist.org/packages/oihana/php-middleware)
 [![Total Downloads](https://img.shields.io/packagist/dt/oihana/php-middleware.svg?style=flat-square)](https://packagist.org/packages/oihana/php-middleware)
@@ -57,6 +57,14 @@ composer require oihana/php-middleware
 - **`enforceRateLimit()`** — fixed-window rate-limit enforcement on PSR-7 requests. Identity resolved verbatim from `KEY` (string), via callable `fn(Request): string`, or by fallback to the client IP. Returns an immutable `RateLimitDecision` (`allowed`, `limit`, `remaining`, `reset`, `retryAfter`).
 - **`withRateLimitHeaders()`** — stamps `Limit / Remaining / Reset` on the response from a decision, plus `Retry-After` when blocked. Defaults to the legacy `X-RateLimit-*` family, opt-in to the RFC 9421 draft `RateLimit-*` family.
 - **`RateLimitStore`** interface — single atomic method `increment(string $key, int $window): int`. Shipped `InMemoryRateLimitStore` (process-local, for tests and CLI tools) ; production-grade `MemcachedRateLimitStore` in [`oihana/php-memcached`](https://github.com/BcommeBois/oihana-php-memcached).
+
+### Idempotency keys
+
+- **`beginIdempotency()`** — decides what to do with a request carrying (or lacking) an `Idempotency-Key` header and claims the key when the request may run. Returns an immutable `IdempotencyDecision` whose outcome is `skip`, `missing`, `invalid`, `proceed`, `mismatch` (same key, another body), `replay` or `inProgress`. The store key is scoped by account, method and path.
+- **`completeIdempotency()`** — keeps the response of a request that ran with its key claimed (status, chosen headers, body), or releases the key when the answer must not be kept (`5xx`, `401`, `403`, `408`, `425`, `429`).
+- **`respondIdempotentReplay()`** — serves a kept response again, marked `Idempotent-Replayed: true`, without running the action.
+- **`idempotencyFingerprint()`** / **`isIdempotencyRecordable()`** — the SHA-256 fingerprint of a JSON or multipart body (stable whatever the member order or the multipart boundary, no file byte kept), and the list of statuses worth keeping.
+- **`IdempotencyStore`** interface — `begin` (atomic claim with a lease) / `complete` / `find` / `release`. Shipped `InMemoryIdempotencyStore` (process-local, for tests and CLI tools). `IdempotencyRecord` serialises with the `IdempotencyField` keys.
 
 ### Observability
 
