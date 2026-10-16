@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.3/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.4/phpunit.xsd"
     backupGlobals="false"
     backupStaticProperties="false"
     beStrictAboutTestsThatDoNotTestAnything="true"
@@ -15,7 +15,7 @@
     displayDetailsOnSkippedTests="true"
     displayDetailsOnTestsThatTriggerNotices="true"
     displayDetailsOnTestsThatTriggerWarnings="true"
-    executionOrder="depends"
+    resolveDependencies="true"
     failOnEmptyTestSuite="true"
     failOnIncomplete="true"
     failOnRisky="true"

@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Testing
 
+- **2026-10-16** — **The PHPUnit configuration speaks the 13.4 schema** — chore(tests): `phpunit.xml`
+  moves from the 13.3 schema to 13.4, and `executionOrder="depends"` (deprecated, removed in PHPUnit 14)
+  becomes `resolveDependencies="true"`, which keeps the same ordering. Removes the 2 test-runner
+  deprecations PHPUnit 13.4 reported. No test code changed.
 - **PHPUnit 13.** The `phpunit/phpunit` constraint moves from `^12` to `^13` and `phpunit.xml` adopts
   the 13.3 schema: `cacheResult` (deprecated, dropped in 14) becomes `recordTestRunHistory="false"`,
   and `executionOrder` drops `defects`, which cannot sort without a recorded history and was inert
